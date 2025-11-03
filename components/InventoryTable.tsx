@@ -1,102 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GameItem, PriceEstimate } from '../types';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 
 interface InventoryTableProps {
   inventory: GameItem[];
+  collection: GameItem[];
+  wishlist: GameItem[];
   imagePreviews: string[];
   onReset: () => void;
-  myCollection: GameItem[];
-  myWishlist: GameItem[];
-  onAddMultipleToCollection: (items: GameItem[]) => void;
-  onAddMultipleToWishlist: (items: GameItem[]) => void;
+  onAddToCollection: (items: GameItem[]) => void;
+  onAddToWishlist: (items: GameItem[]) => void;
 }
-
-type ItemStatus = 'in-collection' | 'on-wishlist' | 'none';
 
 const InventoryTable: React.FC<InventoryTableProps> = ({ 
     inventory, 
+    collection,
+    wishlist,
     imagePreviews, 
-    onReset, 
-    myCollection, 
-    myWishlist, 
-    onAddMultipleToCollection,
-    onAddMultipleToWishlist
+    onReset,
+    onAddToCollection,
+    onAddToWishlist,
 }) => {
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   
-  useEffect(() => {
-    setSelectedItems([]);
-  }, [inventory]);
-
   const formatCurrency = (value: number, currency: string) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
   }
+  
+  const getPrice = (prices: PriceEstimate[], source: string) => prices.find(p => p.source.toLowerCase().includes(source.toLowerCase()));
 
-  const getItemStatus = (item: GameItem): ItemStatus => {
-    if (myCollection.some(collectionItem => collectionItem.title === item.title && collectionItem.platform === item.platform)) {
-        return 'in-collection';
-    }
-    if (myWishlist.some(wishlistItem => wishlistItem.title === item.title && wishlistItem.platform === item.platform)) {
-        return 'on-wishlist';
-    }
-    return 'none';
-  }
+  const collectionTitles = useMemo(() => new Set(collection.map(item => `${item.title}-${item.platform}`)), [collection]);
+  const wishlistTitles = useMemo(() => new Set(wishlist.map(item => `${item.title}-${item.platform}`)), [wishlist]);
+
+  const handleSelect = (sourceId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sourceId)) {
+        newSet.delete(sourceId);
+      } else {
+        newSet.add(sourceId);
+      }
+      return newSet;
+    });
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const allSelectableIds = inventory
-        .filter(item => getItemStatus(item) === 'none')
-        .map(item => item.sourceId!);
-      setSelectedItems(allSelectableIds);
+      setSelectedItems(new Set(inventory.map(item => item.sourceId!)));
     } else {
-      setSelectedItems([]);
+      setSelectedItems(new Set());
     }
   };
 
-  const handleSelectItem = (sourceId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(sourceId) 
-        ? prev.filter(id => id !== sourceId)
-        : [...prev, sourceId]
-    );
+  const handleAddClick = (target: 'collection' | 'wishlist') => {
+    const itemsToAdd = inventory.filter(item => selectedItems.has(item.sourceId!));
+    if (target === 'collection') {
+      onAddToCollection(itemsToAdd);
+    } else {
+      onAddToWishlist(itemsToAdd);
+    }
+    setSelectedItems(new Set());
   };
-
-  const handleAddSelectedToCollection = () => {
-    const itemsToAdd = inventory.filter(item => selectedItems.includes(item.sourceId!));
-    onAddMultipleToCollection(itemsToAdd);
-    setSelectedItems([]);
-  }
-
-  const handleAddSelectedToWishlist = () => {
-    const itemsToAdd = inventory.filter(item => selectedItems.includes(item.sourceId!));
-    onAddMultipleToWishlist(itemsToAdd);
-    setSelectedItems([]);
-  }
-
-  const selectableItemsCount = inventory.filter(item => getItemStatus(item) === 'none').length;
-  const isAllSelected = selectableItemsCount > 0 && selectedItems.length === selectableItemsCount;
   
-  const getPrice = (prices: PriceEstimate[], source: string) => prices.find(p => p.source.toLowerCase() === source.toLowerCase());
-
   return (
     <div className="w-full bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-3xl font-bold text-neutral-light">Scan Results</h2>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-             <button
-                onClick={handleAddSelectedToWishlist}
-                disabled={selectedItems.length === 0}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2.5 px-5 rounded-lg transition-all duration-300 w-full sm:w-auto disabled:bg-neutral-600 disabled:cursor-not-allowed disabled:hover:opacity-100 disabled:opacity-50"
+            <button
+                onClick={() => handleAddClick('collection')}
+                disabled={selectedItems.size === 0}
+                className="bg-sky-600 hover:bg-sky-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
-                Add to Wishlist ({selectedItems.length})
+                Add to Collection ({selectedItems.size})
             </button>
             <button
-                onClick={handleAddSelectedToCollection}
-                disabled={selectedItems.length === 0}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-5 rounded-lg transition-all duration-300 w-full sm:w-auto disabled:bg-neutral-600 disabled:cursor-not-allowed disabled:hover:opacity-100 disabled:opacity-50"
+                onClick={() => handleAddClick('wishlist')}
+                disabled={selectedItems.size === 0}
+                className="bg-amber-600 hover:bg-amber-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
-                Add to Collection ({selectedItems.length})
+                Add to Wishlist ({selectedItems.size})
             </button>
             <button
                 onClick={onReset}
@@ -123,52 +106,48 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
           <thead>
             <tr className="border-b border-neutral-light/10">
               <th scope="col" className="p-4">
-                <input 
-                  type="checkbox"
-                  className="h-4 w-4 rounded bg-transparent border-neutral-medium/50 text-brand-primary focus:ring-brand-primary focus:ring-2"
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                  disabled={selectableItemsCount === 0}
-                />
+                <input type="checkbox" onChange={handleSelectAll} className="rounded" />
               </th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Title</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Platform</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Est. Price</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sources</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Est. Price (USD)</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Est. Price (CHF)</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Status</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sources</th>
             </tr>
           </thead>
           <tbody>
             {inventory.map((item) => {
-              const status = getItemStatus(item);
               const ebaySearchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
               const ricardoSearchUrl = `https://www.ricardo.ch/fr/s/${encodeURIComponent(`${item.title} ${item.platform}`)}`;
               const ebayPrice = getPrice(item.estimatedPrices, 'ebay');
               const ricardoPrice = getPrice(item.estimatedPrices, 'ricardo');
+              const itemKey = `${item.title}-${item.platform}`;
+              const inCollection = collectionTitles.has(itemKey);
+              const inWishlist = wishlistTitles.has(itemKey);
 
               return (
-              <tr key={item.sourceId} className={`transition-colors border-b border-neutral-light/10 ${selectedItems.includes(item.sourceId!) ? 'bg-brand-primary/10' : 'hover:bg-white/5'}`}>
-                <td className="p-4 whitespace-nowrap">
-                   {status === 'none' && (
-                    <input 
-                      type="checkbox"
-                      className="h-4 w-4 rounded bg-transparent border-neutral-medium/50 text-brand-primary focus:ring-brand-primary focus:ring-2"
-                      checked={selectedItems.includes(item.sourceId!)}
-                      onChange={() => handleSelectItem(item.sourceId!)}
-                    />
-                   )}
+              <tr key={item.sourceId} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
+                <td className="p-4">
+                    <input type="checkbox" checked={selectedItems.has(item.sourceId!)} onChange={() => handleSelect(item.sourceId!)} className="rounded" />
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-neutral-light">{item.title}</div>
                     <div className="text-xs text-neutral-400">{item.publisher} ({item.releaseYear})</div>
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
-                <td className="px-5 py-4 whitespace-nowrap">
-                    {ebayPrice && <div className="text-sm font-semibold text-green-400">{formatCurrency(ebayPrice.average, ebayPrice.currency)}</div>}
-                    {ricardoPrice && <div className="text-xs font-medium text-sky-400">{formatCurrency(ricardoPrice.average, ricardoPrice.currency)}</div>}
+                <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">
+                    {ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}
+                </td>
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
+                    {ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}
+                </td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm">
+                    {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-800 text-sky-100">In Collection</span>}
+                    {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-800 text-amber-100">In Wishlist</span>}
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-4">
                         <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
                             eBay
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -178,21 +157,6 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
                     </div>
-                </td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm font-medium">
-                  {status === 'in-collection' ? (
-                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                        In Collection
-                    </span>
-                  ) : status === 'on-wishlist' ? (
-                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
-                        On Wishlist
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-500/20 text-neutral-300">
-                        Not Added
-                    </span>
-                  )}
                 </td>
               </tr>
               );

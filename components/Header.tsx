@@ -1,27 +1,48 @@
 import React from 'react';
-import { useUser } from '../hooks/useUser';
 import { GameControllerIcon } from './icons/GameControllerIcon';
-import { ScanIcon } from './icons/ScanIcon';
 import { CollectionIcon } from './icons/CollectionIcon';
 import { WishlistIcon } from './icons/WishlistIcon';
-import { Page } from '../App';
+import { ScanIcon } from './icons/ScanIcon';
+import { useUser } from '../hooks/useUser';
+import { signOut } from '../services/authService';
 
+type Page = 'scanner' | 'collection' | 'wishlist';
 
 interface HeaderProps {
     currentPage: Page;
-    setCurrentPage: (page: Page) => void;
+    onNavigate: (page: Page) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentPage, setCurrentPage }) => {
-  const { user, logout } = useUser();
+const NavButton: React.FC<{
+    page: Page;
+    currentPage: Page;
+    onNavigate: (page: Page) => void;
+    icon: React.ReactNode;
+    label: string;
+}> = ({ page, currentPage, onNavigate, icon, label }) => (
+    <button
+        onClick={() => onNavigate(page)}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            currentPage === page
+            ? 'bg-brand-primary text-white'
+            : 'text-neutral-300 hover:bg-neutral-dark hover:text-white'
+        }`}
+    >
+        {icon}
+        <span className="hidden sm:inline">{label}</span>
+    </button>
+);
 
-  const navLinkClasses = (page: Page) => 
-    `flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-300 ${
-        currentPage === page 
-        ? 'bg-brand-primary text-white shadow-md' 
-        : 'text-neutral-300 hover:text-white'
-    }`;
+const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
+  const { user } = useUser();
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Failed to log out:", error);
+    }
+  };
 
   return (
     <header className="bg-neutral-darker/50 backdrop-blur-sm border-b border-neutral-light/10 sticky top-0 z-20">
@@ -30,38 +51,30 @@ const Header: React.FC<HeaderProps> = ({ currentPage, setCurrentPage }) => {
             <div className="p-2 bg-gradient-to-br from-glow-start to-glow-end rounded-lg">
                 <GameControllerIcon className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-neutral-light tracking-tight hidden md:block">
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-light tracking-tight">
               AI Game Scanner
             </h1>
          </div>
-
-        {user && (
+         {user && (
             <div className="flex items-center gap-2 sm:gap-4">
-                <nav className="flex items-center gap-1 p-1 bg-neutral-dark rounded-lg">
-                    <button onClick={() => setCurrentPage('scanner')} className={navLinkClasses('scanner')}>
-                        <ScanIcon className="h-5 w-5" />
-                        <span className="hidden sm:inline">Scanner</span>
-                    </button>
-                    <button onClick={() => setCurrentPage('collection')} className={navLinkClasses('collection')}>
-                        <CollectionIcon className="h-5 w-5" />
-                        <span className="hidden sm:inline">My Collection</span>
-                    </button>
-                     <button onClick={() => setCurrentPage('wishlist')} className={navLinkClasses('wishlist')}>
-                        <WishlistIcon className="h-5 w-5" />
-                        <span className="hidden sm:inline">Wishlist</span>
-                    </button>
+                <nav className="flex items-center gap-1 sm:gap-2 bg-neutral-dark/50 p-1 rounded-lg border border-white/10">
+                   <NavButton page="scanner" currentPage={currentPage} onNavigate={onNavigate} icon={<ScanIcon className="h-5 w-5" />} label="Scanner" />
+                   <NavButton page="collection" currentPage={currentPage} onNavigate={onNavigate} icon={<CollectionIcon className="h-5 w-5" />} label="My Collection" />
+                   <NavButton page="wishlist" currentPage={currentPage} onNavigate={onNavigate} icon={<WishlistIcon className="h-5 w-5" />} label="My Wishlist" />
                 </nav>
-                <div className="flex items-center gap-2 sm:gap-4">
-                    <span className="text-sm text-neutral-300 hidden lg:block">{user.email}</span>
-                    <button 
-                        onClick={logout}
-                        className="text-neutral-300 hover:text-white font-medium py-2 px-3 rounded-lg text-sm transition-colors"
+                <div className="flex items-center gap-3">
+                    <div className="text-right hidden md:block">
+                        <p className="text-sm font-medium text-neutral-light">{user.email}</p>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="text-sm text-neutral-400 hover:text-white transition-colors"
                     >
                         Logout
                     </button>
                 </div>
             </div>
-        )}
+         )}
       </div>
     </header>
   );

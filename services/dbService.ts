@@ -1,78 +1,149 @@
-import { User, GameItem } from '../types';
-import { db } from './firebase';
-// Fix: Removed Firebase v9 modular imports as they are not available in the project's Firebase version.
-// import { 
-//     doc,
-//     setDoc, 
-//     collection, 
-//     getDocs,
-//     deleteDoc,
-//     writeBatch
-// } from 'firebase/firestore';
+import { GameItem } from '../types';
 
-export const dbService = {
-  // Creates a user document in the 'users' collection after signup
-  createUser: async (userId: string, email: string): Promise<void> => {
-    // Fix: Switched to v8 `db.collection().doc().set()` syntax.
-    const userDocRef = db.collection('users').doc(userId);
-    await userDocRef.set({ email, createdAt: new Date() });
-  },
-  
-  getCollectionByUserId: async (userId: string): Promise<GameItem[]> => {
-    // Fix: Switched to v8 `db.collection().get()` syntax.
-    const collectionRef = db.collection('users').doc(userId).collection('collection');
-    const snapshot = await collectionRef.get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameItem));
-  },
+// MOCK DATABASE - In a real app, this logic would be on your backend server.
+const DB_KEY = 'mockUserDB';
+const getDb = () => {
+  const db = localStorage.getItem(DB_KEY);
+  return db ? JSON.parse(db) : {};
+};
+const saveDb = (db: any) => {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+};
+// --- END OF MOCK DATABASE ---
 
-  getWishlistByUserId: async (userId: string): Promise<GameItem[]> => {
-    // Fix: Switched to v8 `db.collection().get()` syntax.
-    const wishlistRef = db.collection('users').doc(userId).collection('wishlist');
-    const snapshot = await wishlistRef.get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameItem));
-  },
+// Helper for mock implementation
+const getItems = async (userId: string, list: 'collection' | 'wishlist'): Promise<GameItem[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const db = getDb();
+      const user = db[userId];
+      if (user && user[list]) {
+        resolve(user[list]);
+      } else {
+        resolve([]);
+      }
+    }, 200);
+  });
+};
 
-  addToCollection: async (userId: string, items: Omit<GameItem, 'id' | 'sourceId'>[]): Promise<GameItem[]> => {
-    // Fix: Switched to v8 `db.batch()` syntax for batch writes.
-    const batch = db.batch();
-    const collectionRef = db.collection('users').doc(userId).collection('collection');
-    const addedItems: GameItem[] = [];
+export const getUserCollection = (userId: string): Promise<GameItem[]> => {
+    // In a real app, you would fetch this from your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/collection`);
+    if (!response.ok) throw new Error('Failed to fetch collection.');
+    return response.json();
+    */
+    return getItems(userId, 'collection');
+};
 
-    for (const item of items) {
-        // Fix: Switched to v8 `collection.doc()` to generate a new document reference.
-        const docRef = collectionRef.doc(); // Generate new doc ref with ID
-        batch.set(docRef, item);
-        addedItems.push({ ...item, id: docRef.id });
-    }
-    await batch.commit();
-    return addedItems;
-  },
+export const getUserWishlist = (userId: string): Promise<GameItem[]> => {
+    // In a real app, you would fetch this from your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/wishlist`);
+    if (!response.ok) throw new Error('Failed to fetch wishlist.');
+    return response.json();
+    */
+    return getItems(userId, 'wishlist');
+};
 
-  addToWishlist: async (userId: string, items: Omit<GameItem, 'id' | 'sourceId'>[]): Promise<GameItem[]> => {
-    // Fix: Switched to v8 `db.batch()` syntax for batch writes.
-    const batch = db.batch();
-    const wishlistRef = db.collection('users').doc(userId).collection('wishlist');
-    const addedItems: GameItem[] = [];
+export const addToCollection = (userId: string, items: GameItem[]): Promise<void> => {
+    // In a real app, you would POST this to your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/collection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+    });
+    if (!response.ok) throw new Error('Failed to add to collection.');
+    return;
+    */
 
-    for (const item of items) {
-        // Fix: Switched to v8 `collection.doc()` to generate a new document reference.
-        const docRef = wishlistRef.doc(); // Generate new doc ref with ID
-        batch.set(docRef, item);
-        addedItems.push({ ...item, id: docRef.id });
-    }
-    await batch.commit();
-    return addedItems;
-  },
+    // --- MOCK IMPLEMENTATION ---
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const db = getDb();
+            if (!db[userId]) db[userId] = { password: '', collection: [], wishlist: [] };
+            
+            const userList = db[userId].collection || [];
+            const itemsWithIds = items.map(item => ({ ...item, id: crypto.randomUUID() }));
+            db[userId].collection = [...userList, ...itemsWithIds];
+            
+            saveDb(db);
+            resolve();
+        }, 200);
+    });
+};
 
-  removeFromCollection: async (userId: string, itemId: string): Promise<void> => {
-    // Fix: Switched to v8 `doc.delete()` method.
-    const docRef = db.collection('users').doc(userId).collection('collection').doc(itemId);
-    await docRef.delete();
-  },
+export const addToWishlist = (userId:string, items: GameItem[]): Promise<void> => {
+    // In a real app, you would POST this to your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/wishlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items),
+    });
+    if (!response.ok) throw new Error('Failed to add to wishlist.');
+    return;
+    */
+    
+    // --- MOCK IMPLEMENTATION ---
+     return new Promise((resolve) => {
+        setTimeout(() => {
+            const db = getDb();
+            if (!db[userId]) db[userId] = { password: '', collection: [], wishlist: [] };
 
-  removeFromWishlist: async (userId: string, itemId: string): Promise<void> => {
-    // Fix: Switched to v8 `doc.delete()` method.
-    const docRef = db.collection('users').doc(userId).collection('wishlist').doc(itemId);
-    await docRef.delete();
-  }
+            const userList = db[userId].wishlist || [];
+            const itemsWithIds = items.map(item => ({ ...item, id: crypto.randomUUID() }));
+            db[userId].wishlist = [...userList, ...itemsWithIds];
+
+            saveDb(db);
+            resolve();
+        }, 200);
+    });
+};
+
+export const removeFromCollection = (userId: string, itemId: string): Promise<void> => {
+    // In a real app, you would send a DELETE request to your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/collection/${itemId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to remove from collection.');
+    return;
+    */
+
+    // --- MOCK IMPLEMENTATION ---
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const db = getDb();
+            if (db[userId] && db[userId].collection) {
+                db[userId].collection = db[userId].collection.filter((item: GameItem) => item.id !== itemId);
+                saveDb(db);
+            }
+            resolve();
+        }, 200);
+    });
+};
+
+export const removeFromWishlist = (userId: string, itemId: string): Promise<void> => {
+    // In a real app, you would send a DELETE request to your backend API:
+    /*
+    const response = await fetch(`/api/users/${userId}/wishlist/${itemId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to remove from wishlist.');
+    return;
+    */
+
+    // --- MOCK IMPLEMENTATION ---
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const db = getDb();
+            if (db[userId] && db[userId].wishlist) {
+                db[userId].wishlist = db[userId].wishlist.filter((item: GameItem) => item.id !== itemId);
+                saveDb(db);
+            }
+            resolve();
+        }, 200);
+    });
 };

@@ -33,7 +33,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+      // Fix: Explicitly type 'file' as File to resolve TypeScript error.
+      const files = Array.from(e.dataTransfer.files).filter((file: File) => file.type.startsWith('image/'));
       if (files.length > 0) {
         onImageUpload(files);
       }
@@ -43,7 +44,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
+      // Fix: Explicitly type 'file' as File to resolve TypeScript error.
+      const files = Array.from(e.target.files).filter((file: File) => file.type.startsWith('image/'));
        if (files.length > 0) {
         onImageUpload(files);
       }

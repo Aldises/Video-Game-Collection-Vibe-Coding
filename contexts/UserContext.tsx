@@ -1,51 +1,49 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { authService } from '../services/authService';
-// Fix: Replaced Firebase v9 modular imports with v8 compatible imports.
-// import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import { auth } from '../services/firebase';
 
 interface UserContextType {
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  isLoading: boolean;
+  loading: boolean;
+  login: (user: User) => void;
   logout: () => void;
 }
 
-export const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType>({ 
+  user: null, 
+  loading: true,
+  login: () => {},
+  logout: () => {},
+});
 
-interface UserProviderProps {
-  children: ReactNode;
-}
-
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fix: Switched to v8 `auth.onAuthStateChanged` method and used `firebase.User` for typing.
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser: firebase.User | null) => {
-        if (firebaseUser) {
-            setUser({ id: firebaseUser.uid, email: firebaseUser.email! });
-        } else {
-            setUser(null);
-        }
-        setIsLoading(false);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    try {
+      const storedUser = sessionStorage.getItem('currentUser');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to parse user from session storage", error);
+      sessionStorage.removeItem('currentUser');
+    }
+    setLoading(false);
   }, []);
 
-  const logout = async () => {
-    await authService.logout();
-    // onAuthStateChanged will handle setting the user to null
+  const login = (userData: User) => {
+    setUser(userData);
+    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    setUser(null);
+    sessionStorage.removeItem('currentUser');
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, isLoading, logout }}>
+    <UserContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,57 +1,98 @@
-import { User } from '../types';
-import { auth } from './firebase';
-import { dbService } from './dbService';
-// Fix: Removed Firebase v9 modular imports as they are not available in the project's Firebase version.
-// import { 
-//     createUserWithEmailAndPassword, 
-//     signInWithEmailAndPassword,
-//     signOut,
-//     AuthErrorCodes
-// } from 'firebase/auth';
+import { AuthCredentials, User } from '../types';
 
-export const authService = {
-  login: async (email: string, password: string): Promise<User> => {
-    try {
-      // Fix: Switched to v8 `auth.signInWithEmailAndPassword` method.
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      if (!userCredential.user) {
-        throw new Error("Login failed: user data not available.");
+// MOCK DATABASE - In a real app, this logic would be on your backend server.
+const DB_KEY = 'mockUserDB';
+const getDb = () => {
+  const db = localStorage.getItem(DB_KEY);
+  return db ? JSON.parse(db) : {};
+};
+const saveDb = (db: any) => {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+};
+// --- END OF MOCK DATABASE ---
+
+export const signUp = async ({ email, password }: AuthCredentials): Promise<User> => {
+  // In a real app, you would make a POST request to your backend API.
+  // The backend would handle hashing the password and creating a new user in MongoDB.
+  /*
+  const response = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Sign up failed.');
+  }
+  
+  const { user } = await response.json();
+  return user;
+  */
+
+  // --- MOCK IMPLEMENTATION ---
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const db = getDb();
+      if (db[email]) {
+        return reject(new Error('Email already exists.'));
       }
-      return { id: userCredential.user.uid, email: userCredential.user.email! };
-    } catch (error: any) {
-        // Fix: Replaced v9 AuthErrorCodes.INVALID_LOGIN_CREDENTIALS with equivalent v8 error code strings.
-        if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
-            throw new Error('Invalid email or password.');
-        }
-        throw new Error('An unexpected error occurred during login.');
-    }
-  },
+      db[email] = { password, collection: [], wishlist: [] };
+      saveDb(db);
+      
+      const user = { uid: email, email };
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      resolve(user);
+    }, 500);
+  });
+};
 
-  signup: async (email: string, password: string): Promise<User> => {
-     if (!email || !password) {
-        throw new Error('Email and password are required.');
-     }
-    try {
-        // Fix: Switched to v8 `auth.createUserWithEmailAndPassword` method.
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        if (!userCredential.user) {
-            throw new Error("Signup failed: user data not available.");
-        }
-        const { uid } = userCredential.user;
-        // Create a corresponding user document in Firestore
-        await dbService.createUser(uid, email);
-        return { id: uid, email: userCredential.user.email! };
-    } catch (error: any) {
-        // Fix: Replaced v9 AuthErrorCodes.EMAIL_EXISTS with its equivalent v8 string.
-        if (error.code === 'auth/email-already-in-use') {
-            throw new Error('An account with this email already exists. Please log in.');
-        }
-        throw new Error('An unexpected error occurred during signup.');
-    }
-  },
+export const signIn = async ({ email, password }: AuthCredentials): Promise<User> => {
+    // In a real app, you would make a POST request to your backend API.
+    // The backend would validate credentials against MongoDB and return a user object.
+    /*
+    const response = await fetch('/api/auth/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-  logout: async (): Promise<void> => {
-    // Fix: Switched to v8 `auth.signOut` method.
-    await auth.signOut();
-  },
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Invalid email or password.');
+    }
+    
+    const { user } = await response.json();
+    return user;
+    */
+
+    // --- MOCK IMPLEMENTATION ---
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const db = getDb();
+            const userData = db[email];
+            if (!userData || userData.password !== password) {
+                return reject(new Error('Invalid email or password.'));
+            }
+            const user = { uid: email, email };
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+            resolve(user);
+        }, 500);
+    });
+};
+
+export const signOut = async (): Promise<void> => {
+    // In a real app, you might call a backend endpoint to invalidate a session token.
+    // For a simple session, clearing client-side storage is often sufficient.
+    /*
+    await fetch('/api/auth/signout', { method: 'POST' });
+    */
+
+    // --- MOCK IMPLEMENTATION ---
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            sessionStorage.removeItem('currentUser');
+            resolve();
+        }, 200);
+    });
 };

@@ -1,7 +1,12 @@
-
 export interface User {
-  id: string;
+  uid: string;
+  email: string | null;
+}
+
+// FIX: Added missing AuthCredentials interface to resolve import error in services/authService.ts.
+export interface AuthCredentials {
   email: string;
+  password: string;
 }
 
 export interface PriceEstimate {

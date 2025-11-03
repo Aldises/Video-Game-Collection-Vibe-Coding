@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useUser } from '../hooks/useUser';
-import { authService } from '../services/authService';
+import React, { useState, FormEvent } from 'react';
+import { signIn, signUp } from '../services/authService';
 import { GameControllerIcon } from './icons/GameControllerIcon';
+import { useUser } from '../hooks/useUser';
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,17 +9,20 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { setUser } = useUser();
+  const { login } = useUser();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
     try {
-      const authFunction = isLogin ? authService.login : authService.signup;
-      const user = await authFunction(email, password);
-      setUser(user);
+      let user;
+      if (isLogin) {
+        user = await signIn({ email, password });
+      } else {
+        user = await signUp({ email, password });
+      }
+      login(user);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
@@ -28,72 +31,87 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-darker p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-neutral-darker via-neutral-darker to-brand-secondary/20 z-0"></div>
-        <div className="absolute top-0 left-0 w-96 h-96 bg-glow-start/10 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-glow-end/10 rounded-full filter blur-3xl opacity-50 animate-pulse [animation-delay:2s]"></div>
-
-      <div className="w-full max-w-md bg-neutral-dark/50 backdrop-blur-lg border border-neutral-light/10 p-8 rounded-2xl shadow-2xl z-10 animate-fade-in">
-        <div className="text-center mb-8">
-            <div className="inline-block p-3 bg-gradient-to-br from-glow-start to-glow-end rounded-xl mb-4">
-                <GameControllerIcon className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-neutral-darker flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center mb-8">
+            <div className="p-3 bg-gradient-to-br from-glow-start to-glow-end rounded-xl mb-4">
+                <GameControllerIcon className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-neutral-light tracking-tight">
-                Welcome Back
+              AI Game Scanner
             </h1>
-            <p className="text-neutral-400 mt-2">{isLogin ? 'Sign in to access your collection' : 'Create an account to get started'}</p>
+            <p className="text-neutral-400">Sign in to manage your collection</p>
         </div>
-        
-        <form onSubmit={handleSubmit} noValidate>
-          {error && <p className="bg-red-900/50 text-red-400 text-sm p-3 rounded-md mb-4 text-center">{error}</p>}
-          
-          <div className="relative mb-4">
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Email address"
-              className="peer w-full bg-transparent border-b-2 border-neutral-light/20 text-neutral-light placeholder-transparent focus:outline-none focus:border-brand-primary pt-4 pb-2"
-            />
-            <label htmlFor="email" className="absolute left-0 -top-3.5 text-neutral-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-placeholder-shown:top-5 peer-focus:-top-3.5 peer-focus:text-brand-primary peer-focus:text-sm">
-              Email Address
-            </label>
-          </div>
 
-          <div className="relative mb-6">
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Password"
-              className="peer w-full bg-transparent border-b-2 border-neutral-light/20 text-neutral-light placeholder-transparent focus:outline-none focus:border-brand-primary pt-4 pb-2"
-            />
-             <label htmlFor="password" className="absolute left-0 -top-3.5 text-neutral-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-placeholder-shown:top-5 peer-focus:-top-3.5 peer-focus:text-brand-primary peer-focus:text-sm">
-              Password
-            </label>
-          </div>
+        <div className="bg-neutral-dark p-8 rounded-xl border border-neutral-light/10 shadow-2xl">
+          <h2 className="text-2xl font-bold text-center text-neutral-light mb-6">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-300">
+                Email Address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-neutral-light/20 rounded-md shadow-sm placeholder-neutral-500 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-neutral-darker text-white"
+                />
+              </div>
+            </div>
 
-          <div className="flex flex-col items-center gap-4">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[48px]"
-            >
-              {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : isLogin ? 'Sign In' : 'Create Account'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(!isLogin); setError(null); }}
-              className="inline-block align-baseline font-bold text-sm text-neutral-400 hover:text-white"
-            >
-              {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
-            </button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-300">
+                Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-neutral-light/20 rounded-md shadow-sm placeholder-neutral-500 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-neutral-darker text-white"
+                />
+              </div>
+            </div>
+            
+            {error && <p className="text-sm text-red-400">{error}</p>}
+
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-secondary disabled:opacity-50 disabled:cursor-wait"
+              >
+                {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-neutral-400">
+              {isLogin ? "Don't have an account?" : 'Already have an account?'}
+              <button
+                onClick={() => {
+                    setIsLogin(!isLogin);
+                    setError(null);
+                }}
+                className="font-medium bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 ml-1"
+              >
+                {isLogin ? 'Sign Up' : 'Sign In'}
+              </button>
+            </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
