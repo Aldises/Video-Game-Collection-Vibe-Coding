@@ -1,0 +1,5 @@
+{
+  "name": "Video Game Inventory Scanner",
+  "description": "An application that uses AI to identify video games and consoles from an uploaded image. It automatically creates an inventory with details like title, platform, release year, and estimated market price.",
+  "requestFramePermissions": []
+}
