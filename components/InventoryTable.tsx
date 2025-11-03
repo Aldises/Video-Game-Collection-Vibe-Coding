@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { GameItem, PriceEstimate } from '../types';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface InventoryTableProps {
   inventory: GameItem[];
@@ -22,6 +23,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     onAddToWishlist,
 }) => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const { t } = useLocalization();
   
   const formatCurrency = (value: number, currency: string) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
@@ -65,34 +67,34 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
   return (
     <div className="w-full bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-light">Scan Results</h2>
+        <h2 className="text-3xl font-bold text-neutral-light">{t('scanResults.title')}</h2>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <button
                 onClick={() => handleAddClick('collection')}
                 disabled={selectedItems.size === 0}
                 className="bg-sky-600 hover:bg-sky-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
-                Add to Collection ({selectedItems.size})
+                {t('scanResults.addToCollection', { count: selectedItems.size })}
             </button>
             <button
                 onClick={() => handleAddClick('wishlist')}
                 disabled={selectedItems.size === 0}
                 className="bg-amber-600 hover:bg-amber-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
-                Add to Wishlist ({selectedItems.size})
+                {t('scanResults.addToWishlist', { count: selectedItems.size })}
             </button>
             <button
                 onClick={onReset}
                 className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2.5 px-5 rounded-lg transition-opacity w-full sm:w-auto"
             >
-                Scan More
+                {t('scanResults.scanMore')}
             </button>
         </div>
       </div>
 
       {imagePreviews.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4 text-neutral-200">Uploaded Images</h3>
+            <h3 className="text-xl font-semibold mb-4 text-neutral-200">{t('scanResults.uploadedImages')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {imagePreviews.map((src, index) => (
                 <img key={index} src={src} alt={`Uploaded collection preview ${index + 1}`} className="rounded-lg w-full object-cover aspect-square shadow-lg" />
@@ -108,12 +110,13 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               <th scope="col" className="p-4">
                 <input type="checkbox" onChange={handleSelectAll} className="rounded" />
               </th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Title</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Platform</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Est. Price (USD)</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Est. Price (CHF)</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Status</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sources</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.title')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.platform')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.publisher')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceUsd')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.status')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
             </tr>
           </thead>
           <tbody>
@@ -133,9 +136,10 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-neutral-light">{item.title}</div>
-                    <div className="text-xs text-neutral-400">{item.publisher} ({item.releaseYear})</div>
+                    <div className="text-xs text-neutral-400">{item.releaseYear}</div>
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">
                     {ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}
                 </td>
@@ -143,8 +147,8 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                     {ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm">
-                    {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-800 text-sky-100">In Collection</span>}
-                    {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-800 text-amber-100">In Wishlist</span>}
+                    {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-800 text-sky-100">{t('common.inCollection')}</span>}
+                    {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-800 text-amber-100">{t('common.inWishlist')}</span>}
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
                     <div className="flex items-center gap-4">
@@ -166,7 +170,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       </div>
        {inventory.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">No items were identified in the uploaded images.</p>
+            <p className="text-neutral-400">{t('scanResults.noItemsFound')}</p>
          </div>
        )}
     </div>

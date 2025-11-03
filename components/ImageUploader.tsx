@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface ImageUploaderProps {
   onImageUpload: (files: File[]) => void;
@@ -8,6 +9,7 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLocalization();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -58,8 +60,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
 
   return (
     <div className="w-full max-w-3xl text-center animate-fade-in">
-      <h2 className="text-4xl font-extrabold text-neutral-light mb-2">Upload Your Collection</h2>
-      <p className="text-lg text-neutral-400 mb-8">Take photos of your games and consoles, and let AI do the rest.</p>
+      <h2 className="text-4xl font-extrabold text-neutral-light mb-2">{t('uploader.title')}</h2>
+      <p className="text-lg text-neutral-400 mb-8">{t('uploader.description')}</p>
       <div
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
@@ -84,12 +86,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
                 <UploadIcon className={`h-12 w-12 transition-colors duration-300 ${isDragging ? 'text-brand-primary' : 'text-neutral-400'}`} />
             </div>
             <span className="mt-6 block text-md font-semibold text-neutral-light">
-            Drag & drop photos here or{' '}
+            {t('uploader.dropOrBrowse')}{' '}
             <button onClick={onBrowseClick} type="button" className="font-semibold bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 transition-opacity focus:outline-none">
-                browse files
+                {t('uploader.browseFiles')}
             </button>
             </span>
-            <p className="mt-1 block text-sm text-neutral-500">Supports multiple images (PNG, JPG, etc.)</p>
+            <p className="mt-1 block text-sm text-neutral-500">{t('uploader.supports')}</p>
         </div>
       </div>
     </div>

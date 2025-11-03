@@ -13,11 +13,13 @@ import MyWishlistPage from './components/MyWishlistPage';
 import AnalyticsPage from './components/AnalyticsPage';
 import { useUser } from './hooks/useUser';
 import { getUserCollection, getUserWishlist, addToCollection, addToWishlist } from './services/dbService';
+import { useLocalization } from './hooks/useLocalization';
 
 type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics';
 
 const App: React.FC = () => {
   const { user, loading } = useUser();
+  const { t } = useLocalization();
   const [inventory, setInventory] = useState<GameItem[]>([]);
   const [collection, setCollection] = useState<GameItem[]>([]);
   const [wishlist, setWishlist] = useState<GameItem[]>([]);
@@ -61,11 +63,12 @@ const App: React.FC = () => {
       setInventory(itemsWithSourceIds);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred. Please try a different image.');
+      const errorMessage = err instanceof Error ? t(err.message) : t('scanner.errorGeneric');
+      setError(errorMessage);
     } finally {
       setIsScanning(false);
     }
-  }, []);
+  }, [t]);
   
   const handleResetScanner = useCallback(() => {
     setInventory([]);
@@ -93,18 +96,18 @@ const App: React.FC = () => {
         return <ImageUploader onImageUpload={handleImageUpload} />;
     }
     if (isScanning) {
-        return <Loader message="AI is analyzing your collection... this may take a moment." />;
+        return <Loader message={t('scanner.loader')} />;
     }
     if (error) {
         return (
             <div className="text-center p-8 bg-neutral-dark/50 backdrop-blur-sm border border-red-500/50 rounded-xl max-w-2xl w-full animate-fade-in">
-                <h2 className="text-2xl font-bold text-red-400 mb-4">Analysis Failed</h2>
+                <h2 className="text-2xl font-bold text-red-400 mb-4">{t('scanner.errorTitle')}</h2>
                 <p className="text-neutral-300 mb-6">{error}</p>
                 <button
                     onClick={handleResetScanner}
                     className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity"
                 >
-                    Try Again
+                    {t('common.tryAgain')}
                 </button>
             </div>
         );
@@ -145,16 +148,12 @@ const App: React.FC = () => {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-neutral-darker"><Loader message="Initializing..." /></div>;
   }
-  
-  if (!user) {
-    return <LoginPage />;
-  }
 
   return (
     <div className="min-h-screen bg-neutral-darker text-neutral-light flex flex-col font-sans">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
-        {renderContent()}
+        {!user ? <LoginPage /> : renderContent()}
       </main>
       <Footer />
     </div>

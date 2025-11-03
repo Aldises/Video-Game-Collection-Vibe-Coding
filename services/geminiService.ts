@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameItem } from '../types';
 
@@ -80,20 +81,20 @@ export const analyzeImage = async (image: { data: string; mimeType: string }): P
     
     const jsonString = response.text.trim();
     if (!jsonString) {
-        throw new Error("The AI returned an empty response. The image might not contain recognizable games or consoles.");
+        throw new Error("scanner.error.empty");
     }
 
     const parsedData: GameItem[] = JSON.parse(jsonString);
     if (!Array.isArray(parsedData)) {
-      throw new Error("AI response was not in the expected format (array).");
+      throw new Error("scanner.error.json");
     }
     return parsedData;
 
   } catch (error) {
     console.error("Error analyzing image with Gemini:", error);
     if (error instanceof Error && error.message.includes('json')) {
-         throw new Error("The AI failed to provide a valid JSON response. The image might be unclear or contain no recognizable items.");
+         throw new Error("scanner.error.json");
     }
-    throw new Error(`Failed to analyze image. ${error instanceof Error ? error.message : ''}`);
+    throw new Error(`scanner.error.failed`);
   }
 };

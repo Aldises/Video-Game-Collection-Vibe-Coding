@@ -1,0 +1,124 @@
+{
+  "common": {
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "back": "Retour",
+    "clear": "Effacer",
+    "actions": "Actions",
+    "status": "Statut",
+    "inCollection": "En collection",
+    "inWishlist": "En liste de souhaits",
+    "tryAgain": "Réessayer",
+    "processing": "Traitement..."
+  },
+  "nav": {
+    "scanner": "Scanner",
+    "collection": "Ma Collection",
+    "wishlist": "Ma Liste de Souhaits",
+    "analytics": "Analyses"
+  },
+  "header": {
+    "title": "Scanner de Jeux IA",
+    "logout": "Déconnexion"
+  },
+  "footer": {
+    "poweredBy": "Propulsé par React, Tailwind CSS et Google Gemini"
+  },
+  "login": {
+    "tagline": "Connectez-vous pour gérer votre collection",
+    "welcome": "Content de vous revoir",
+    "createAccount": "Créer un compte",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "errorInvalid": "E-mail ou mot de passe invalide.",
+    "errorExists": "Cet e-mail existe déjà.",
+    "errorUnknown": "Une erreur inconnue est survenue."
+  },
+  "uploader": {
+    "title": "Téléchargez Votre Collection",
+    "description": "Prenez des photos de vos jeux et consoles, et laissez l'IA faire le reste.",
+    "dropOrBrowse": "Glissez-déposez des photos ici ou",
+    "browseFiles": "parcourez les fichiers",
+    "supports": "Prend en charge plusieurs images (PNG, JPG, etc.)"
+  },
+  "scanner": {
+    "loader": "L'IA analyse votre collection... cela peut prendre un moment.",
+    "errorTitle": "Échec de l'analyse",
+    "errorGeneric": "Une erreur inconnue est survenue. Veuillez essayer une autre image.",
+    "errorEmpty": "L'IA a renvoyé une réponse vide. L'image pourrait ne pas contenir de jeux ou de consoles reconnaissables.",
+    "errorJson": "L'IA n'a pas fourni une réponse JSON valide. L'image pourrait être floue ou ne contenir aucun élément reconnaissable.",
+    "errorFailed": "Échec de l'analyse de l'image."
+  },
+  "scanResults": {
+    "title": "Résultats du Scan",
+    "addToCollection": "Ajouter à la collection ({count})",
+    "addToWishlist": "Ajouter à la liste ({count})",
+    "scanMore": "Scanner plus",
+    "uploadedImages": "Images téléchargées",
+    "noItemsFound": "Aucun article n'a été identifié dans les images téléchargées."
+  },
+  "tableHeaders": {
+    "title": "Titre",
+    "platform": "Plateforme",
+    "publisher": "Éditeur",
+    "year": "Année",
+    "itemType": "Type d'article",
+    "priceUsd": "Prix Est. (USD)",
+    "priceChf": "Prix Est. (CHF)",
+    "sources": "Sources"
+  },
+  "collection": {
+    "title": "Ma Collection ({count})",
+    "import": "Importer",
+    "export": "Exporter",
+    "filterTitle": "Filtrer par Titre...",
+    "filterPlatform": "Toutes plateformes",
+    "filterPublisher": "Filtrer par Éditeur...",
+    "filterYear": "Filtrer par Année...",
+    "confirmRemove": "Êtes-vous sûr de vouloir retirer cet article ?",
+    "noMatch": "Aucun article ne correspond à vos filtres actuels.",
+    "empty": "Votre collection est vide. Utilisez le Scanner pour ajouter des articles !",
+    "importTitle": "Importer la collection depuis un CSV",
+    "importDesc": "Téléchargez un fichier CSV pour ajouter des articles à votre collection.",
+    "importDrop": "Glissez-déposez un fichier CSV ici ou",
+    "importBrowse": "parcourez les fichiers",
+    "importFormat": "Doit suivre le format de l'exportation CSV.",
+    "importLoader": "Importation de votre collection, veuillez patienter...",
+    "backToCollection": "Retour à la collection"
+  },
+  "wishlist": {
+    "title": "Ma Liste de Souhaits ({count})",
+    "confirmRemove": "Êtes-vous sûr de vouloir retirer cet article de votre liste de souhaits ?",
+    "noMatch": "Aucun article ne correspond à vos filtres actuels.",
+    "empty": "Votre liste de souhaits est vide. Utilisez le Scanner pour ajouter des articles !"
+  },
+  "analytics": {
+    "title": "Analyse de la Collection",
+    "description": "Un aperçu de votre collection de jeux vidéo.",
+    "emptyTitle": "Analyses",
+    "emptyDesc": "Votre collection est vide. Ajoutez des articles via le Scanner pour voir vos statistiques !",
+    "totalItems": "Articles au total",
+    "totalValueUsd": "Valeur Est. Totale (eBay USD)",
+    "totalValueChf": "Valeur Est. Totale (Ricardo CHF)",
+    "chartPlatformDist": "Répartition par plateforme",
+    "chartValueUsd": "Valeur par plateforme (eBay USD)",
+    "chartValueChf": "Valeur par plateforme (Ricardo CHF)",
+    "chartDecade": "Collection par décennie",
+    "chartNoData": "Aucune donnée disponible pour ce graphique.",
+    "chartItemsSuffix": "{value} article(s)"
+  },
+  "csv": {
+    "errorEmptyFile": "Le fichier est vide.",
+    "errorMissingHeaders": "Les en-têtes sont manquants dans le CSV.",
+    "errorInvalidHeaders": "Le CSV doit contenir au moins les en-têtes requis.",
+    "errorParse": "Échec de l'analyse du fichier CSV. Veuillez vérifier le format.",
+    "errorReadFile": "Échec de la lecture du fichier.",
+    "errorNoValidItems": "Aucun article valide trouvé dans le fichier CSV. Veuillez vérifier le format.",
+    "errorUpload": "Veuillez télécharger un fichier .csv valide.",
+    "alertEmptyCollection": "Votre collection est vide."
+  }
+}

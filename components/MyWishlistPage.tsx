@@ -3,21 +3,23 @@ import { GameItem } from '../types';
 import { removeFromWishlist } from '../services/dbService';
 import { useUser } from '../hooks/useUser';
 import { SortIcon } from './icons/SortIcon';
+import { useLocalization } from '../hooks/useLocalization';
 
 interface MyWishlistPageProps {
   wishlist: GameItem[];
   onDataChange: () => void;
 }
 
-type SortKey = 'title' | 'platform' | 'releaseYear';
+type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher';
 type SortDirection = 'asc' | 'desc';
 
 
 const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange }) => {
   const { user } = useUser();
+  const { t } = useLocalization();
   const [sortKey, setSortKey] = useState<SortKey>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [filters, setFilters] = useState({ title: '', platform: '' });
+  const [filters, setFilters] = useState({ title: '', platform: '', publisher: '' });
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(wishlist.map(item => item.platform));
@@ -30,11 +32,11 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   };
   
   const resetFilters = () => {
-    setFilters({ title: '', platform: '' });
+    setFilters({ title: '', platform: '', publisher: '' });
   };
 
   const handleRemove = async (itemId: string) => {
-    if (user && window.confirm("Are you sure you want to remove this item from your wishlist?")) {
+    if (user && window.confirm(t('wishlist.confirmRemove'))) {
       await removeFromWishlist(user.uid, itemId);
       onDataChange();
     }
@@ -44,7 +46,8 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
     const filtered = wishlist.filter(item => {
       return (
         item.title.toLowerCase().includes(filters.title.toLowerCase()) &&
-        (filters.platform === '' || item.platform === filters.platform)
+        (filters.platform === '' || item.platform === filters.platform) &&
+        item.publisher.toLowerCase().includes(filters.publisher.toLowerCase())
       );
     });
 
@@ -79,17 +82,18 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   return (
     <div className="w-full max-w-7xl animate-fade-in bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-light">My Wishlist ({filteredAndSortedWishlist.length})</h2>
+        <h2 className="text-3xl font-bold text-neutral-light">{t('wishlist.title', { count: filteredAndSortedWishlist.length })}</h2>
       </div>
       
       <div className="mb-6 p-4 bg-neutral-dark/30 rounded-lg border border-neutral-light/10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <input type="text" name="title" placeholder="Filter by Title..." value={filters.title} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <input type="text" name="title" placeholder={t('collection.filterTitle')} value={filters.title} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
               <select name="platform" value={filters.platform} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
-                  <option value="">All Platforms</option>
+                  <option value="">{t('collection.filterPlatform')}</option>
                   {uniquePlatforms.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <button onClick={resetFilters} className="bg-neutral-600 hover:bg-neutral-500 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">Clear</button>
+              <input type="text" name="publisher" placeholder={t('collection.filterPublisher')} value={filters.publisher} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <button onClick={resetFilters} className="bg-neutral-600 hover:bg-neutral-500 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.clear')}</button>
           </div>
       </div>
       
@@ -97,10 +101,11 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
         <table className="min-w-full">
             <thead>
                 <tr className="border-b border-neutral-light/10">
-                    <SortableHeader headerKey="title" label="Title" />
-                    <SortableHeader headerKey="platform" label="Platform" />
-                    <SortableHeader headerKey="releaseYear" label="Year" />
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">Actions</th>
+                    <SortableHeader headerKey="title" label={t('tableHeaders.title')} />
+                    <SortableHeader headerKey="platform" label={t('tableHeaders.platform')} />
+                    <SortableHeader headerKey="publisher" label={t('tableHeaders.publisher')} />
+                    <SortableHeader headerKey="releaseYear" label={t('tableHeaders.year')} />
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,16 +113,16 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
                     <tr key={item.id} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
                         <td className="px-5 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-neutral-light">{item.title}</div>
-                            <div className="text-xs text-neutral-400">{item.publisher}</div>
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.releaseYear}</td>
                         <td className="px-5 py-4 whitespace-nowrap">
                             <button
                                 onClick={() => handleRemove(item.id!)}
                                 className="text-red-500 hover:text-red-400 text-sm font-medium"
                             >
-                                Remove
+                                {t('common.remove')}
                             </button>
                         </td>
                     </tr>
@@ -127,12 +132,12 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
       </div>
       {wishlist.length > 0 && filteredAndSortedWishlist.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">No items match your current filters.</p>
+            <p className="text-neutral-400">{t('wishlist.noMatch')}</p>
          </div>
       )}
       {wishlist.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">Your wishlist is empty. Use the Scanner to add items!</p>
+            <p className="text-neutral-400">{t('wishlist.empty')}</p>
          </div>
        )}
     </div>

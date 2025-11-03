@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GameControllerIcon } from './icons/GameControllerIcon';
 import { CollectionIcon } from './icons/CollectionIcon';
 import { WishlistIcon } from './icons/WishlistIcon';
 import { ScanIcon } from './icons/ScanIcon';
 import { AnalyticsIcon } from './icons/AnalyticsIcon';
+import { LanguageIcon } from './icons/LanguageIcon';
 import { useUser } from '../hooks/useUser';
 import { signOut } from '../services/authService';
+import { useLocalization } from '../hooks/useLocalization';
 
 type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics';
 
@@ -34,12 +36,63 @@ const NavButton: React.FC<{
     </button>
 );
 
+const LanguageSelector: React.FC = () => {
+    const { language, setLanguage } = useLocalization();
+    const [isOpen, setIsOpen] = useState(false);
+    const languages = {
+        en: 'English',
+        fr: 'Français',
+        de: 'Deutsch'
+    };
+
+    const handleSelectLanguage = (lang: 'en' | 'fr' | 'de') => {
+        setLanguage(lang);
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-1 text-neutral-300 hover:text-white transition-colors"
+                aria-haspopup="true"
+                aria-expanded={isOpen}
+            >
+                <LanguageIcon className="h-5 w-5" />
+                <span className="hidden sm:inline text-sm font-medium">{languages[language]}</span>
+            </button>
+            {isOpen && (
+                <div
+                    className="absolute right-0 mt-2 w-36 bg-neutral-dark rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-30"
+                    role="menu"
+                    aria-orientation="vertical"
+                >
+                    <div className="py-1" role="none">
+                        {Object.entries(languages).map(([code, name]) => (
+                            <button
+                                key={code}
+                                onClick={() => handleSelectLanguage(code as 'en' | 'fr' | 'de')}
+                                className="w-full text-left block px-4 py-2 text-sm text-neutral-200 hover:bg-brand-primary hover:text-white"
+                                role="menuitem"
+                            >
+                                {name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
-  const { user } = useUser();
+  const { user, logout } = useUser();
+  const { t } = useLocalization();
 
   const handleLogout = async () => {
     try {
       await signOut();
+      logout();
     } catch (error) {
       console.error("Failed to log out:", error);
     }
@@ -53,30 +106,36 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <GameControllerIcon className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-neutral-light tracking-tight">
-              AI Game Scanner
+              {t('header.title')}
             </h1>
          </div>
-         {user && (
-            <div className="flex items-center gap-2 sm:gap-4">
+         <div className="flex items-center gap-2 sm:gap-4">
+            {user && (
                 <nav className="flex items-center gap-1 sm:gap-2 bg-neutral-dark/50 p-1 rounded-lg border border-white/10">
-                   <NavButton page="scanner" currentPage={currentPage} onNavigate={onNavigate} icon={<ScanIcon className="h-5 w-5" />} label="Scanner" />
-                   <NavButton page="collection" currentPage={currentPage} onNavigate={onNavigate} icon={<CollectionIcon className="h-5 w-5" />} label="My Collection" />
-                   <NavButton page="wishlist" currentPage={currentPage} onNavigate={onNavigate} icon={<WishlistIcon className="h-5 w-5" />} label="My Wishlist" />
-                   <NavButton page="analytics" currentPage={currentPage} onNavigate={onNavigate} icon={<AnalyticsIcon className="h-5 w-5" />} label="Analytics" />
+                    <NavButton page="scanner" currentPage={currentPage} onNavigate={onNavigate} icon={<ScanIcon className="h-5 w-5" />} label={t('nav.scanner')} />
+                    <NavButton page="collection" currentPage={currentPage} onNavigate={onNavigate} icon={<CollectionIcon className="h-5 w-5" />} label={t('nav.collection')} />
+                    <NavButton page="wishlist" currentPage={currentPage} onNavigate={onNavigate} icon={<WishlistIcon className="h-5 w-5" />} label={t('nav.wishlist')} />
+                    <NavButton page="analytics" currentPage={currentPage} onNavigate={onNavigate} icon={<AnalyticsIcon className="h-5 w-5" />} label={t('nav.analytics')} />
                 </nav>
-                <div className="flex items-center gap-3">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium text-neutral-light">{user.email}</p>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="text-sm text-neutral-400 hover:text-white transition-colors"
-                    >
-                        Logout
-                    </button>
-                </div>
+            )}
+            <div className="flex items-center gap-3">
+                <LanguageSelector />
+                {user && (
+                    <>
+                        <div className="text-right hidden md:block">
+                            <p className="text-sm font-medium text-neutral-light">{user.email}</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="text-sm text-neutral-400 hover:text-white transition-colors"
+                            title={t('header.logout')}
+                        >
+                            {t('header.logout')}
+                        </button>
+                    </>
+                )}
             </div>
-         )}
+         </div>
       </div>
     </header>
   );

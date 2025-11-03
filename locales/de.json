@@ -1,0 +1,124 @@
+{
+  "common": {
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "back": "Zurück",
+    "clear": "Löschen",
+    "actions": "Aktionen",
+    "status": "Status",
+    "inCollection": "In Sammlung",
+    "inWishlist": "Auf Wunschliste",
+    "tryAgain": "Erneut versuchen",
+    "processing": "Wird verarbeitet..."
+  },
+  "nav": {
+    "scanner": "Scanner",
+    "collection": "Meine Sammlung",
+    "wishlist": "Meine Wunschliste",
+    "analytics": "Analysen"
+  },
+  "header": {
+    "title": "KI-Spiele-Scanner",
+    "logout": "Abmelden"
+  },
+  "footer": {
+    "poweredBy": "Angetrieben von React, Tailwind CSS und Google Gemini"
+  },
+  "login": {
+    "tagline": "Melden Sie sich an, um Ihre Sammlung zu verwalten",
+    "welcome": "Willkommen zurück",
+    "createAccount": "Konto erstellen",
+    "emailLabel": "E-Mail-Adresse",
+    "passwordLabel": "Passwort",
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "noAccount": "Haben Sie kein Konto?",
+    "haveAccount": "Haben Sie bereits ein Konto?",
+    "errorInvalid": "Ungültige E-Mail oder ungültiges Passwort.",
+    "errorExists": "E-Mail existiert bereits.",
+    "errorUnknown": "Ein unbekannter Fehler ist aufgetreten."
+  },
+  "uploader": {
+    "title": "Laden Sie Ihre Sammlung hoch",
+    "description": "Machen Sie Fotos von Ihren Spielen und Konsolen und lassen Sie die KI den Rest erledigen.",
+    "dropOrBrowse": "Fotos hierher ziehen oder",
+    "browseFiles": "Dateien durchsuchen",
+    "supports": "Unterstützt mehrere Bilder (PNG, JPG, etc.)"
+  },
+  "scanner": {
+    "loader": "Die KI analysiert Ihre Sammlung... dies kann einen Moment dauern.",
+    "errorTitle": "Analyse fehlgeschlagen",
+    "errorGeneric": "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie ein anderes Bild.",
+    "errorEmpty": "Die KI gab eine leere Antwort zurück. Das Bild enthält möglicherweise keine erkennbaren Spiele oder Konsolen.",
+    "errorJson": "Die KI konnte keine gültige JSON-Antwort liefern. Das Bild ist möglicherweise unscharf oder enthält keine erkennbaren Elemente.",
+    "errorFailed": "Analyse des Bildes fehlgeschlagen."
+  },
+  "scanResults": {
+    "title": "Scan-Ergebnisse",
+    "addToCollection": "Zur Sammlung hinzufügen ({count})",
+    "addToWishlist": "Zur Wunschliste hinzufügen ({count})",
+    "scanMore": "Mehr scannen",
+    "uploadedImages": "Hochgeladene Bilder",
+    "noItemsFound": "In den hochgeladenen Bildern wurden keine Artikel identifiziert."
+  },
+  "tableHeaders": {
+    "title": "Titel",
+    "platform": "Plattform",
+    "publisher": "Herausgeber",
+    "year": "Jahr",
+    "itemType": "Elementtyp",
+    "priceUsd": "Schätzpreis (USD)",
+    "priceChf": "Schätzpreis (CHF)",
+    "sources": "Quellen"
+  },
+  "collection": {
+    "title": "Meine Sammlung ({count})",
+    "import": "Importieren",
+    "export": "Exportieren",
+    "filterTitle": "Nach Titel filtern...",
+    "filterPlatform": "Alle Plattformen",
+    "filterPublisher": "Nach Herausgeber filtern...",
+    "filterYear": "Nach Jahr filtern...",
+    "confirmRemove": "Sind Sie sicher, dass Sie diesen Artikel entfernen möchten?",
+    "noMatch": "Keine Artikel entsprechen Ihren aktuellen Filtern.",
+    "empty": "Ihre Sammlung ist leer. Verwenden Sie den Scanner, um Artikel hinzuzufügen!",
+    "importTitle": "Sammlung aus CSV importieren",
+    "importDesc": "Laden Sie eine CSV-Datei hoch, um Artikel zu Ihrer Sammlung hinzuzufügen.",
+    "importDrop": "Ziehen Sie eine CSV-Datei hierher oder",
+    "importBrowse": "Dateien durchsuchen",
+    "importFormat": "Muss dem Format des CSV-Exports entsprechen.",
+    "importLoader": "Ihre Sammlung wird importiert, bitte warten...",
+    "backToCollection": "Zurück zur Sammlung"
+  },
+  "wishlist": {
+    "title": "Meine Wunschliste ({count})",
+    "confirmRemove": "Sind Sie sicher, dass Sie diesen Artikel von Ihrer Wunschliste entfernen möchten?",
+    "noMatch": "Keine Artikel entsprechen Ihren aktuellen Filtern.",
+    "empty": "Ihre Wunschliste ist leer. Verwenden Sie den Scanner, um Artikel hinzuzufügen!"
+  },
+  "analytics": {
+    "title": "Sammlungsanalyse",
+    "description": "Eine Übersicht über Ihre Videospielsammlung.",
+    "emptyTitle": "Analysen",
+    "emptyDesc": "Ihre Sammlung ist leer. Fügen Sie Artikel über den Scanner hinzu, um Ihre Statistiken zu sehen!",
+    "totalItems": "Artikel insgesamt",
+    "totalValueUsd": "Gesamtschätzwert (eBay USD)",
+    "totalValueChf": "Gesamtschätzwert (Ricardo CHF)",
+    "chartPlatformDist": "Plattformverteilung",
+    "chartValueUsd": "Wert nach Plattform (eBay USD)",
+    "chartValueChf": "Wert nach Plattform (Ricardo CHF)",
+    "chartDecade": "Sammlung nach Jahrzehnt",
+    "chartNoData": "Für dieses Diagramm sind keine Daten verfügbar.",
+    "chartItemsSuffix": "{value} Artikel"
+  },
+  "csv": {
+    "errorEmptyFile": "Datei ist leer.",
+    "errorMissingHeaders": "Kopfzeilen in CSV fehlen.",
+    "errorInvalidHeaders": "Die CSV muss mindestens die erforderlichen Kopfzeilen enthalten.",
+    "errorParse": "Fehler beim Parsen der CSV-Datei. Bitte überprüfen Sie das Format.",
+    "errorReadFile": "Fehler beim Lesen der Datei.",
+    "errorNoValidItems": "Keine gültigen Artikel in der CSV-Datei gefunden. Bitte überprüfen Sie das Format.",
+    "errorUpload": "Bitte laden Sie eine gültige .csv-Datei hoch.",
+    "alertEmptyCollection": "Ihre Sammlung ist leer."
+  }
+}

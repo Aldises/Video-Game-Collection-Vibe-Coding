@@ -91,7 +91,9 @@ export const signOut = async (): Promise<void> => {
     // --- MOCK IMPLEMENTATION ---
     return new Promise((resolve) => {
         setTimeout(() => {
-            sessionStorage.removeItem('currentUser');
+            // Per user request, clear localStorage on logout.
+            // In this mock app, this deletes all users and their data.
+            localStorage.clear();
             resolve();
         }, 200);
     });

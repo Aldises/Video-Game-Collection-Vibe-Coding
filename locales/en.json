@@ -1,0 +1,124 @@
+{
+  "common": {
+    "add": "Add",
+    "remove": "Remove",
+    "back": "Back",
+    "clear": "Clear",
+    "actions": "Actions",
+    "status": "Status",
+    "inCollection": "In Collection",
+    "inWishlist": "In Wishlist",
+    "tryAgain": "Try Again",
+    "processing": "Processing..."
+  },
+  "nav": {
+    "scanner": "Scanner",
+    "collection": "My Collection",
+    "wishlist": "My Wishlist",
+    "analytics": "Analytics"
+  },
+  "header": {
+    "title": "AI Game Scanner",
+    "logout": "Logout"
+  },
+  "footer": {
+    "poweredBy": "Powered by React, Tailwind CSS, and Google Gemini"
+  },
+  "login": {
+    "tagline": "Sign in to manage your collection",
+    "welcome": "Welcome Back",
+    "createAccount": "Create Account",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "errorInvalid": "Invalid email or password.",
+    "errorExists": "Email already exists.",
+    "errorUnknown": "An unknown error occurred."
+  },
+  "uploader": {
+    "title": "Upload Your Collection",
+    "description": "Take photos of your games and consoles, and let AI do the rest.",
+    "dropOrBrowse": "Drag & drop photos here or",
+    "browseFiles": "browse files",
+    "supports": "Supports multiple images (PNG, JPG, etc.)"
+  },
+  "scanner": {
+    "loader": "AI is analyzing your collection... this may take a moment.",
+    "errorTitle": "Analysis Failed",
+    "errorGeneric": "An unknown error occurred. Please try a different image.",
+    "errorEmpty": "The AI returned an empty response. The image might not contain recognizable games or consoles.",
+    "errorJson": "The AI failed to provide a valid JSON response. The image might be unclear or contain no recognizable items.",
+    "errorFailed": "Failed to analyze image."
+  },
+  "scanResults": {
+    "title": "Scan Results",
+    "addToCollection": "Add to Collection ({count})",
+    "addToWishlist": "Add to Wishlist ({count})",
+    "scanMore": "Scan More",
+    "uploadedImages": "Uploaded Images",
+    "noItemsFound": "No items were identified in the uploaded images."
+  },
+  "tableHeaders": {
+    "title": "Title",
+    "platform": "Platform",
+    "publisher": "Publisher",
+    "year": "Year",
+    "itemType": "Item Type",
+    "priceUsd": "Est. Price (USD)",
+    "priceChf": "Est. Price (CHF)",
+    "sources": "Sources"
+  },
+  "collection": {
+    "title": "My Collection ({count})",
+    "import": "Import",
+    "export": "Export",
+    "filterTitle": "Filter by Title...",
+    "filterPlatform": "All Platforms",
+    "filterPublisher": "Filter by Publisher...",
+    "filterYear": "Filter by Year...",
+    "confirmRemove": "Are you sure you want to remove this item?",
+    "noMatch": "No items match your current filters.",
+    "empty": "Your collection is empty. Use the Scanner to add items!",
+    "importTitle": "Import Collection from CSV",
+    "importDesc": "Upload a CSV file to add items to your collection.",
+    "importDrop": "Drag & drop a CSV file here or",
+    "importBrowse": "browse files",
+    "importFormat": "Must follow the format from the CSV export.",
+    "importLoader": "Importing your collection, please wait...",
+    "backToCollection": "Back to Collection"
+  },
+  "wishlist": {
+    "title": "My Wishlist ({count})",
+    "confirmRemove": "Are you sure you want to remove this item from your wishlist?",
+    "noMatch": "No items match your current filters.",
+    "empty": "Your wishlist is empty. Use the Scanner to add items!"
+  },
+  "analytics": {
+    "title": "Collection Analytics",
+    "description": "An overview of your video game collection.",
+    "emptyTitle": "Analytics",
+    "emptyDesc": "Your collection is empty. Add items via the Scanner to see your stats!",
+    "totalItems": "Total Items",
+    "totalValueUsd": "Total Est. Value (eBay USD)",
+    "totalValueChf": "Total Est. Value (Ricardo CHF)",
+    "chartPlatformDist": "Platform Distribution",
+    "chartValueUsd": "Value by Platform (eBay USD)",
+    "chartValueChf": "Value by Platform (Ricardo CHF)",
+    "chartDecade": "Collection by Decade",
+    "chartNoData": "No data available for this chart.",
+    "chartItemsSuffix": "{value} item(s)"
+  },
+  "csv": {
+    "errorEmptyFile": "File is empty.",
+    "errorMissingHeaders": "CSV is missing headers.",
+    "errorInvalidHeaders": "CSV must contain at least the required headers.",
+    "errorParse": "Failed to parse CSV file. Please check the format.",
+    "errorReadFile": "Failed to read file.",
+    "errorNoValidItems": "No valid items found in the CSV file. Please check the format.",
+    "errorUpload": "Please upload a valid .csv file.",
+    "alertEmptyCollection": "Your collection is empty."
+  }
+}
