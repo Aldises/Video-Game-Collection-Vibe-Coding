@@ -3,10 +3,11 @@ import { GameControllerIcon } from './icons/GameControllerIcon';
 import { CollectionIcon } from './icons/CollectionIcon';
 import { WishlistIcon } from './icons/WishlistIcon';
 import { ScanIcon } from './icons/ScanIcon';
+import { AnalyticsIcon } from './icons/AnalyticsIcon';
 import { useUser } from '../hooks/useUser';
 import { signOut } from '../services/authService';
 
-type Page = 'scanner' | 'collection' | 'wishlist';
+type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics';
 
 interface HeaderProps {
     currentPage: Page;
@@ -61,6 +62,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                    <NavButton page="scanner" currentPage={currentPage} onNavigate={onNavigate} icon={<ScanIcon className="h-5 w-5" />} label="Scanner" />
                    <NavButton page="collection" currentPage={currentPage} onNavigate={onNavigate} icon={<CollectionIcon className="h-5 w-5" />} label="My Collection" />
                    <NavButton page="wishlist" currentPage={currentPage} onNavigate={onNavigate} icon={<WishlistIcon className="h-5 w-5" />} label="My Wishlist" />
+                   <NavButton page="analytics" currentPage={currentPage} onNavigate={onNavigate} icon={<AnalyticsIcon className="h-5 w-5" />} label="Analytics" />
                 </nav>
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden md:block">

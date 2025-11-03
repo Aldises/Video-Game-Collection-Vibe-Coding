@@ -10,10 +10,11 @@ import Loader from './components/Loader';
 import LoginPage from './components/LoginPage';
 import MyCollectionPage from './components/MyCollectionPage';
 import MyWishlistPage from './components/MyWishlistPage';
+import AnalyticsPage from './components/AnalyticsPage';
 import { useUser } from './hooks/useUser';
 import { getUserCollection, getUserWishlist, addToCollection, addToWishlist } from './services/dbService';
 
-type Page = 'scanner' | 'collection' | 'wishlist';
+type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics';
 
 const App: React.FC = () => {
   const { user, loading } = useUser();
@@ -134,6 +135,8 @@ const App: React.FC = () => {
             return <MyCollectionPage collection={collection} onDataChange={refetchData} />;
         case 'wishlist':
             return <MyWishlistPage wishlist={wishlist} onDataChange={refetchData} />;
+        case 'analytics':
+            return <AnalyticsPage collection={collection} />;
         default:
             return renderScannerPage();
     }
