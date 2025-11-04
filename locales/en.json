@@ -100,6 +100,8 @@
     "title": "My Collection ({count})",
     "import": "Import",
     "export": "Export",
+    "removeDuplicates": "Remove Duplicates",
+    "updatePrices": "Update Prices",
     "filterTitle": "Filter by Title...",
     "filterPlatform": "All Platforms",
     "filterPublisher": "Filter by Publisher...",
@@ -115,7 +117,16 @@
     "importFormat": "Must follow the format from the CSV export.",
     "importLoader": "Importing your collection, please wait...",
     "backToCollection": "Back to Collection",
-    "editingLocked": "Pricing data is not editable."
+    "editingLocked": "Pricing data is not editable.",
+    "confirmDuplicatesTitle": "Remove Duplicate Items",
+    "confirmDuplicatesMessage": "This will scan your collection for items with the same title and platform, keeping the oldest entry and removing all newer copies. Are you sure?",
+    "confirmDuplicatesAction": "Find & Remove",
+    "duplicatesRemoved": "{count} duplicate items were removed.",
+    "noDuplicatesFound": "No duplicates were found in your collection.",
+    "duplicatesError": "An error occurred while removing duplicates.",
+    "updatePricesLoader": "Updating prices... ({progress}% complete)",
+    "updatePricesSuccess": "All prices have been successfully updated.",
+    "updatePricesError": "An error occurred while updating prices."
   },
   "wishlist": {
     "title": "My Wishlist ({count})",
@@ -219,5 +230,12 @@
     "passwordResetSuccess": "Your password has been successfully reset. You can now log in with your new password.",
     "backToLoginButton": "Back to Login",
     "passwordMismatch": "The new passwords do not match."
+  },
+  "pagination": {
+    "itemsPerPage": "Items per page",
+    "showingOf": "Showing {start} - {end} of {total} results",
+    "previous": "Previous",
+    "next": "Next",
+    "all": "All"
   }
 }

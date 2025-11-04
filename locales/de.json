@@ -100,6 +100,8 @@
     "title": "Meine Sammlung ({count})",
     "import": "Importieren",
     "export": "Exportieren",
+    "removeDuplicates": "Duplikate entfernen",
+    "updatePrices": "Preise aktualisieren",
     "filterTitle": "Nach Titel filtern...",
     "filterPlatform": "Alle Plattformen",
     "filterPublisher": "Nach Herausgeber filtern...",
@@ -115,7 +117,16 @@
     "importFormat": "Muss dem Format des CSV-Exports entsprechen.",
     "importLoader": "Ihre Sammlung wird importiert, bitte warten...",
     "backToCollection": "Zurück zur Sammlung",
-    "editingLocked": "Preisdaten sind nicht editierbar."
+    "editingLocked": "Preisdaten sind nicht editierbar.",
+    "confirmDuplicatesTitle": "Doppelte Artikel entfernen",
+    "confirmDuplicatesMessage": "Dies durchsucht Ihre Sammlung nach Artikeln mit demselben Titel und derselben Plattform, behält den ältesten Eintrag und entfernt alle neueren Kopien. Sind Sie sicher?",
+    "confirmDuplicatesAction": "Suchen & Entfernen",
+    "duplicatesRemoved": "{count} doppelte Artikel wurden entfernt.",
+    "noDuplicatesFound": "In Ihrer Sammlung wurden keine Duplikate gefunden.",
+    "duplicatesError": "Beim Entfernen von Duplikaten ist ein Fehler aufgetreten.",
+    "updatePricesLoader": "Preise werden aktualisiert... ({progress}% abgeschlossen)",
+    "updatePricesSuccess": "Alle Preise wurden erfolgreich aktualisiert.",
+    "updatePricesError": "Beim Aktualisieren der Preise ist ein Fehler aufgetreten."
   },
   "wishlist": {
     "title": "Meine Wunschliste ({count})",
@@ -219,5 +230,12 @@
     "passwordResetSuccess": "Ihr Passwort wurde erfolgreich zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
     "backToLoginButton": "Zurück zum Login",
     "passwordMismatch": "Die neuen Passwörter stimmen nicht überein."
+  },
+   "pagination": {
+    "itemsPerPage": "Artikel pro Seite",
+    "showingOf": "Zeige {start} - {end} von {total} Ergebnissen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "all": "Alle"
   }
 }

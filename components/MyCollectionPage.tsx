@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { GameItem, PriceEstimate } from '../types';
-import { removeFromCollection, addToCollection, updateCollectionItem } from '../services/dbService';
+import { removeFromCollection, addToCollection, updateCollectionItem, removeDuplicatesFromCollection, updateAllCollectionPrices } from '../services/dbService';
 import { useUser } from '../hooks/useUser';
 import { exportCollectionToCsv, parseCollectionFromCsv } from '../utils/csvUtils';
 import { ExportIcon } from './icons/ExportIcon';
@@ -12,16 +12,19 @@ import { EditIcon } from './icons/EditIcon';
 import { SaveIcon } from './icons/SaveIcon';
 import { CancelIcon } from './icons/CancelIcon';
 import { TrashIcon } from './icons/TrashIcon';
+import { SparklesIcon } from './icons/SparklesIcon';
+import { ArrowPathIcon } from './icons/ArrowPathIcon';
 import Loader from './Loader';
 import Modal from './Modal';
 import { useLocalization } from '../hooks/useLocalization';
+import Pagination from './Pagination';
 
 interface MyCollectionPageProps {
   collection: GameItem[];
   onDataChange: () => void;
 }
 
-type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition';
+type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition' | 'priceEbayUsd' | 'priceRicardoChf' | 'priceAnibisChf' | 'priceEbayEur';
 type SortDirection = 'asc' | 'desc';
 
 const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataChange }) => {
@@ -39,6 +42,20 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedItemData, setEditedItemData] = useState<GameItem | null>(null);
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState(0);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(collection.map(item => item.platform));
@@ -48,10 +65,12 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
   };
   
   const resetFilters = () => {
     setFilters({ title: '', platform: '', publisher: '', releaseYear: '' });
+    setCurrentPage(1);
   };
 
   const handleRemove = async () => {
@@ -100,19 +119,61 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
       );
     });
 
+    const getPriceAverage = (item: GameItem, sourceKey: SortKey): number => {
+      let sourceName = '';
+      switch (sourceKey) {
+        case 'priceEbayUsd': sourceName = 'ebay.com'; break;
+        case 'priceRicardoChf': sourceName = 'ricardo'; break;
+        case 'priceAnibisChf': sourceName = 'anibis'; break;
+        case 'priceEbayEur': sourceName = 'ebay.fr'; break;
+        default: return -1;
+      }
+      const price = item.estimatedPrices.find(p => p.source.toLowerCase().includes(sourceName));
+      return price ? price.average : -1; // Use -1 to sort items without a price to the bottom
+    };
+
     return [...filtered].sort((a, b) => {
-      const valA = a[sortKey];
-      const valB = b[sortKey];
+      let valA: string | number, valB: string | number;
+
+      if (sortKey.startsWith('price')) {
+        valA = getPriceAverage(a, sortKey as SortKey);
+        valB = getPriceAverage(b, sortKey as SortKey);
+      } else {
+        valA = a[sortKey as keyof Omit<GameItem, 'id' | 'sourceId' | 'estimatedPrices'>];
+        valB = b[sortKey as keyof Omit<GameItem, 'id' | 'sourceId' | 'estimatedPrices'>];
+      }
       
       let comparison = 0;
-      if (valA > valB) {
-        comparison = 1;
-      } else if (valA < valB) {
-        comparison = -1;
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        comparison = valA.localeCompare(valB);
+      } else {
+        if (valA > valB) {
+            comparison = 1;
+        } else if (valA < valB) {
+            comparison = -1;
+        }
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [collection, sortKey, sortDirection, filters]);
+  
+  const totalItems = filteredAndSortedCollection.length;
+  const totalPages = itemsPerPage > 0 ? Math.ceil(totalItems / itemsPerPage) : 1;
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedCollection = useMemo(() => {
+      if (itemsPerPage === 0) { // "All" is selected
+          return filteredAndSortedCollection;
+      }
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      return filteredAndSortedCollection.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedCollection, currentPage, itemsPerPage]);
+
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -167,10 +228,46 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     };
     exportCollectionToCsv(collection, translations);
   }
+  
+  const handleConfirmRemoveDuplicates = async () => {
+    if (!user) return;
+    setIsCheckingDuplicates(true);
+    setIsDuplicateModalOpen(false);
+    try {
+        const removedCount = await removeDuplicatesFromCollection(user.id);
+        if (removedCount > 0) {
+            setNotification({ message: t('collection.duplicatesRemoved', { count: removedCount }), type: 'success' });
+        } else {
+            setNotification({ message: t('collection.noDuplicatesFound'), type: 'success' });
+        }
+        onDataChange();
+    } catch (error) {
+        console.error("Error removing duplicates:", error);
+        setNotification({ message: t('collection.duplicatesError'), type: 'error' });
+    } finally {
+        setIsCheckingDuplicates(false);
+    }
+  }
+
+  const handleUpdatePrices = async () => {
+    if (!user) return;
+    setIsUpdatingPrices(true);
+    setUpdateProgress(0);
+    try {
+        await updateAllCollectionPrices(user.id, setUpdateProgress);
+        setNotification({ message: t('collection.updatePricesSuccess'), type: 'success' });
+        onDataChange();
+    } catch (error) {
+        console.error("Error updating prices:", error);
+        setNotification({ message: t('collection.updatePricesError'), type: 'error' });
+    } finally {
+        setIsUpdatingPrices(false);
+    }
+  }
 
   const SortableHeader: React.FC<{ headerKey: SortKey, label: string }> = ({ headerKey, label }) => (
     <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-        <button onClick={() => handleSort(headerKey)} className="flex items-center gap-1 group">
+        <button onClick={() => handleSort(headerKey)} className="flex items-center gap-1 group" disabled={isUpdatingPrices}>
             {label}
             {sortKey === headerKey && <SortIcon className={`h-4 w-4 transition-transform ${sortDirection === 'asc' ? 'rotate-180' : ''}`} />}
         </button>
@@ -247,10 +344,26 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
       );
   }
   
+  if (isUpdatingPrices) {
+    return (
+        <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <Loader message={t('collection.updatePricesLoader', { progress: updateProgress })} />
+        </div>
+    );
+  }
+  
   const defaultInputClass = "bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-primary";
+  const notificationClass = notification?.type === 'success'
+    ? 'bg-green-100 dark:bg-green-900/80 border-green-500 text-green-800 dark:text-green-200'
+    : 'bg-red-100 dark:bg-red-900/80 border-red-500 text-red-800 dark:text-red-200';
 
   return (
     <>
+    {notification && (
+        <div className={`fixed top-24 right-8 z-50 backdrop-blur-sm px-6 py-3 rounded-lg shadow-lg animate-fade-in ${notificationClass}`}>
+            {notification.message}
+        </div>
+    )}
     <Modal
         isOpen={itemToRemove !== null}
         onClose={() => setItemToRemove(null)}
@@ -261,10 +374,36 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     >
         {t('collection.confirmRemoveMessage')}
     </Modal>
+    <Modal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        onConfirm={handleConfirmRemoveDuplicates}
+        title={t('collection.confirmDuplicatesTitle')}
+        confirmText={isCheckingDuplicates ? t('common.processing') : t('collection.confirmDuplicatesAction')}
+        confirmVariant="danger"
+    >
+        {t('collection.confirmDuplicatesMessage')}
+    </Modal>
     <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('collection.title', { count: filteredAndSortedCollection.length })}</h2>
-        <div className="flex items-center gap-4">
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('collection.title', { count: totalItems })}</h2>
+        <div className="flex items-center gap-4 flex-wrap justify-center">
+            <button
+                onClick={handleUpdatePrices}
+                disabled={isCheckingDuplicates}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+            >
+                <ArrowPathIcon className="h-5 w-5" />
+                {t('collection.updatePrices')}
+            </button>
+            <button
+                onClick={() => setIsDuplicateModalOpen(true)}
+                disabled={isCheckingDuplicates}
+                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+            >
+                <SparklesIcon className="h-5 w-5" />
+                {t('collection.removeDuplicates')}
+            </button>
             <button
                 onClick={() => setIsImportView(true)}
                 className="inline-flex items-center gap-2 bg-neutral-600 hover:bg-neutral-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
@@ -305,16 +444,16 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                     <SortableHeader headerKey="releaseYear" label={t('tableHeaders.year')} />
                     <SortableHeader headerKey="itemType" label={t('tableHeaders.itemType')} />
                     <SortableHeader headerKey="condition" label={t('tableHeaders.condition')} />
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
+                    <SortableHeader headerKey="priceEbayUsd" label={t('tableHeaders.priceEbayUsd')} />
+                    <SortableHeader headerKey="priceRicardoChf" label={t('tableHeaders.priceRicardoChf')} />
+                    <SortableHeader headerKey="priceAnibisChf" label={t('tableHeaders.priceAnibisChf')} />
+                    <SortableHeader headerKey="priceEbayEur" label={t('tableHeaders.priceEbayEur')} />
                     <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
                     <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
             </thead>
             <tbody>
-                {filteredAndSortedCollection.map(item => {
+                {paginatedCollection.map(item => {
                     const isEditing = editingItemId === item.id;
                     if (isEditing) {
                         return (
@@ -380,8 +519,8 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => handleEditClick(item)} className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white" title={t('common.edit')}><EditIcon className="h-5 w-5"/></button>
-                                <button onClick={() => setItemToRemove(item.id!)} className="text-red-500 hover:text-red-400" title={t('common.remove')}><TrashIcon className="h-5 w-5"/></button>
+                                <button onClick={() => handleEditClick(item)} disabled={isUpdatingPrices} className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed" title={t('common.edit')}><EditIcon className="h-5 w-5"/></button>
+                                <button onClick={() => setItemToRemove(item.id!)} disabled={isUpdatingPrices} className="text-red-500 hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed" title={t('common.remove')}><TrashIcon className="h-5 w-5"/></button>
                             </div>
                         </td>
                     </tr>
@@ -390,7 +529,20 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
             </tbody>
         </table>
       </div>
-      {collection.length > 0 && filteredAndSortedCollection.length === 0 && (
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(size) => {
+            setItemsPerPage(size);
+            setCurrentPage(1);
+        }}
+      />
+      
+      {collection.length > 0 && paginatedCollection.length === 0 && (
           <div className="text-center py-16">
             <p className="text-neutral-500 dark:text-neutral-400">{t('collection.noMatch')}</p>
          </div>

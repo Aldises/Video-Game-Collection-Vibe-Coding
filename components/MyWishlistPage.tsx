@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GameItem } from '../types';
 import { removeFromWishlist } from '../services/dbService';
 import { useUser } from '../hooks/useUser';
@@ -6,6 +6,7 @@ import { SortIcon } from './icons/SortIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../hooks/useLocalization';
 import Modal from './Modal';
+import Pagination from './Pagination';
 
 interface MyWishlistPageProps {
   wishlist: GameItem[];
@@ -23,6 +24,9 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filters, setFilters] = useState({ title: '', platform: '', publisher: '', itemType: '', condition: '' });
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(wishlist.map(item => item.platform));
@@ -32,10 +36,12 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
   };
   
   const resetFilters = () => {
     setFilters({ title: '', platform: '', publisher: '', itemType: '', condition: '' });
+    setCurrentPage(1);
   };
 
   const handleRemove = async () => {
@@ -66,6 +72,23 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [wishlist, sortKey, sortDirection, filters]);
+
+  const totalItems = filteredAndSortedWishlist.length;
+  const totalPages = itemsPerPage > 0 ? Math.ceil(totalItems / itemsPerPage) : 1;
+
+  useEffect(() => {
+      if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(totalPages);
+      }
+  }, [currentPage, totalPages]);
+
+  const paginatedWishlist = useMemo(() => {
+      if (itemsPerPage === 0) { // "All" is selected
+          return filteredAndSortedWishlist;
+      }
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      return filteredAndSortedWishlist.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedWishlist, currentPage, itemsPerPage]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -99,7 +122,7 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
     </Modal>
     <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('wishlist.title', { count: filteredAndSortedWishlist.length })}</h2>
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('wishlist.title', { count: totalItems })}</h2>
       </div>
       
       <div className="mb-6 p-4 bg-gray-200/30 dark:bg-neutral-dark/30 rounded-lg border border-neutral-900/10 dark:border-neutral-light/10">
@@ -140,7 +163,7 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
                 </tr>
             </thead>
             <tbody>
-                {filteredAndSortedWishlist.map(item => (
+                {paginatedWishlist.map(item => (
                     <tr key={item.id} className="transition-colors border-b border-neutral-900/10 dark:border-neutral-light/10 hover:bg-black/5 dark:hover:bg-white/5">
                         <td className="px-5 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-neutral-900 dark:text-neutral-light">{item.title}</div>
@@ -164,7 +187,20 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
             </tbody>
         </table>
       </div>
-      {wishlist.length > 0 && filteredAndSortedWishlist.length === 0 && (
+
+       <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(size) => {
+            setItemsPerPage(size);
+            setCurrentPage(1);
+        }}
+      />
+      
+      {wishlist.length > 0 && paginatedWishlist.length === 0 && (
          <div className="text-center py-16">
             <p className="text-neutral-500 dark:text-neutral-400">{t('wishlist.noMatch')}</p>
          </div>

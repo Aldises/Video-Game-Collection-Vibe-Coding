@@ -1,5 +1,6 @@
-import { GameItem } from '../types';
+import { GameItem, PriceEstimate } from '../types';
 import { supabase } from './supabaseClient';
+import { fetchPriceForItem } from './geminiService';
 
 // Type helper for Supabase returns
 type DbPriceEstimate = {
@@ -217,5 +218,99 @@ export const updateCollectionItem = async (userId: string, updatedItem: GameItem
     if (error) {
         console.error("Error updating collection item:", error);
         throw new Error(error.message);
+    }
+};
+
+export const removeDuplicatesFromCollection = async (userId: string): Promise<number> => {
+  const { data: items, error } = await supabase
+    .from('collection_items')
+    .select('id, title, platform')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error("Error fetching collection for duplicate check:", error);
+    throw new Error(error.message);
+  }
+  if (!items || items.length === 0) {
+    return 0;
+  }
+
+  const itemsMap = new Map<string, { id: number }[]>();
+  items.forEach(item => {
+    const key = `${item.title.toLowerCase().trim()}-${item.platform.toLowerCase().trim()}`;
+    if (!itemsMap.has(key)) {
+      itemsMap.set(key, []);
+    }
+    itemsMap.get(key)!.push(item);
+  });
+
+  const duplicateIds: number[] = [];
+  itemsMap.forEach(group => {
+    if (group.length > 1) {
+      // Sort by ID to find the original (oldest)
+      group.sort((a, b) => a.id - b.id);
+      // Mark all but the first one for deletion
+      const idsToDelete = group.slice(1).map(item => item.id);
+      duplicateIds.push(...idsToDelete);
+    }
+  });
+
+  if (duplicateIds.length === 0) {
+    return 0;
+  }
+
+  const { error: deleteError } = await supabase
+    .from('collection_items')
+    .delete()
+    .in('id', duplicateIds);
+
+  if (deleteError) {
+    console.error("Error deleting duplicates:", deleteError);
+    throw new Error(deleteError.message);
+  }
+
+  return duplicateIds.length;
+};
+
+export const updateAllCollectionPrices = async (userId: string, onProgress: (progress: number) => void): Promise<void> => {
+    const { data: items, error } = await supabase
+        .from('collection_items')
+        .select('id, title, platform')
+        .eq('user_id', userId);
+    
+    if (error) {
+        console.error("Error fetching collection for price update:", error);
+        throw new Error(error.message);
+    }
+    if (!items || items.length === 0) {
+        return;
+    }
+
+    for (const [index, item] of items.entries()) {
+        try {
+            const newPrices = await fetchPriceForItem({ title: item.title, platform: item.platform });
+
+            if (newPrices.length > 0) {
+                // Delete old prices
+                await supabase.from('price_estimates').delete().eq('collection_item_id', item.id);
+
+                // Insert new prices
+                const priceInserts = newPrices.map(p => ({
+                    collection_item_id: item.id,
+                    source: p.source,
+                    currency: p.currency,
+                    low_price: p.low,
+                    average_price: p.average,
+                    high_price: p.high,
+                }));
+                await supabase.from('price_estimates').insert(priceInserts);
+            }
+        } catch (itemError) {
+            console.error(`Skipping price update for item ${item.id} due to an error:`, itemError);
+        } finally {
+            // Report progress
+            const progressPercentage = ((index + 1) / items.length) * 100;
+            onProgress(Math.round(progressPercentage));
+        }
     }
 };
