@@ -86,13 +86,12 @@ const LanguageSelector: React.FC = () => {
 };
 
 const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const { t } = useLocalization();
 
   const handleLogout = async () => {
     try {
       await signOut();
-      logout();
     } catch (error) {
       console.error("Failed to log out:", error);
     }

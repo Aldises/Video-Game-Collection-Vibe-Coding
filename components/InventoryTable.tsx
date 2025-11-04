@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { GameItem, PriceEstimate } from '../types';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
+import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../hooks/useLocalization';
 
 interface InventoryTableProps {
@@ -63,6 +64,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     }
     setSelectedItems(new Set());
   };
+
+  const handleDeleteAll = () => {
+    if (window.confirm(t('scanResults.confirmClearAll'))) {
+        onReset();
+    }
+  };
   
   return (
     <div className="w-full bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
@@ -97,7 +104,17 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             <h3 className="text-xl font-semibold mb-4 text-neutral-200">{t('scanResults.uploadedImages')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {imagePreviews.map((src, index) => (
-                <img key={index} src={src} alt={`Uploaded collection preview ${index + 1}`} className="rounded-lg w-full object-cover aspect-square shadow-lg" />
+                <div key={index} className="relative group">
+                    <img src={src} alt={`Uploaded collection preview ${index + 1}`} className="rounded-lg w-full object-cover aspect-square shadow-lg" />
+                    <button
+                        onClick={handleDeleteAll}
+                        title={t('scanResults.deleteImageTooltip')}
+                        className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 focus:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        aria-label={t('scanResults.deleteImageTooltip')}
+                    >
+                        <TrashIcon className="h-5 w-5" />
+                    </button>
+                </div>
             ))}
             </div>
           </div>
@@ -113,8 +130,12 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.title')}</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.platform')}</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.publisher')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceUsd')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.itemType')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.condition')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.status')}</th>
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
             </tr>
@@ -123,8 +144,14 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
             {inventory.map((item) => {
               const ebaySearchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
               const ricardoSearchUrl = `https://www.ricardo.ch/fr/s/${encodeURIComponent(`${item.title} ${item.platform}`)}`;
-              const ebayPrice = getPrice(item.estimatedPrices, 'ebay');
+              const anibisSearchUrl = `https://www.anibis.ch/fr/s?s=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
+              const ebayFrSearchUrl = `https://www.ebay.fr/sch/i.html?_nkw=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
+
+              const ebayPrice = getPrice(item.estimatedPrices, 'ebay.com');
               const ricardoPrice = getPrice(item.estimatedPrices, 'ricardo');
+              const anibisPrice = getPrice(item.estimatedPrices, 'anibis');
+              const ebayFrPrice = getPrice(item.estimatedPrices, 'ebay.fr');
+
               const itemKey = `${item.title}-${item.platform}`;
               const inCollection = collectionTitles.has(itemKey);
               const inWishlist = wishlistTitles.has(itemKey);
@@ -140,24 +167,40 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.itemType}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">
                     {ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}
                 </td>
                  <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
                     {ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}
                 </td>
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
+                    {anibisPrice ? formatCurrency(anibisPrice.average, anibisPrice.currency) : 'N/A'}
+                </td>
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-400">
+                    {ebayFrPrice ? formatCurrency(ebayFrPrice.average, ebayFrPrice.currency) : 'N/A'}
+                </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm">
                     {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-800 text-sky-100">{t('common.inCollection')}</span>}
                     {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-800 text-amber-100">{t('common.inWishlist')}</span>}
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
                         <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
-                            eBay
+                            eBay.com
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
                          <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
                             Ricardo
+                            <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </a>
+                        <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                            Anibis
+                            <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </a>
+                        <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                            eBay.fr
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
                     </div>

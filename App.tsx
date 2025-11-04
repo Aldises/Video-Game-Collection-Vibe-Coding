@@ -30,8 +30,8 @@ const App: React.FC = () => {
 
   const refetchData = useCallback(async () => {
     if (user) {
-      const newCollection = await getUserCollection(user.uid);
-      const newWishlist = await getUserWishlist(user.uid);
+      const newCollection = await getUserCollection(user.id);
+      const newWishlist = await getUserWishlist(user.id);
       setCollection(newCollection);
       setWishlist(newWishlist);
     }
@@ -79,14 +79,14 @@ const App: React.FC = () => {
   
   const handleAddToCollection = async (items: GameItem[]) => {
     if (user) {
-      await addToCollection(user.uid, items);
+      await addToCollection(user.id, items);
       await refetchData();
     }
   };
 
   const handleAddToWishlist = async (items: GameItem[]) => {
     if (user) {
-      await addToWishlist(user.uid, items);
+      await addToWishlist(user.id, items);
       await refetchData();
     }
   };

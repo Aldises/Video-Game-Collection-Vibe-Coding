@@ -7,14 +7,23 @@ interface CsvExportTranslations {
         publisher: string;
         releaseYear: string;
         itemType: string;
-        ebayLow: string;
-        ebayAvg: string;
-        ebayHigh: string;
-        ebayCurrency: string;
+        condition: string;
+        ebayComLow: string;
+        ebayComAvg: string;
+        ebayComHigh: string;
+        ebayComCurrency: string;
         ricardoLow: string;
         ricardoAvg: string;
         ricardoHigh: string;
         ricardoCurrency: string;
+        anibisLow: string;
+        anibisAvg: string;
+        anibisHigh: string;
+        anibisCurrency: string;
+        ebayFrLow: string;
+        ebayFrAvg: string;
+        ebayFrHigh: string;
+        ebayFrCurrency: string;
     };
     alertEmpty: string;
 }
@@ -27,15 +36,18 @@ export const exportCollectionToCsv = (collection: GameItem[], translations: CsvE
 
   const headers = [
     translations.headers.title, translations.headers.platform, translations.headers.publisher,
-    translations.headers.releaseYear, translations.headers.itemType,
-    translations.headers.ebayLow, translations.headers.ebayAvg, translations.headers.ebayHigh,
-    translations.headers.ebayCurrency, translations.headers.ricardoLow, translations.headers.ricardoAvg,
-    translations.headers.ricardoHigh, translations.headers.ricardoCurrency
+    translations.headers.releaseYear, translations.headers.itemType, translations.headers.condition,
+    translations.headers.ebayComLow, translations.headers.ebayComAvg, translations.headers.ebayComHigh, translations.headers.ebayComCurrency,
+    translations.headers.ricardoLow, translations.headers.ricardoAvg, translations.headers.ricardoHigh, translations.headers.ricardoCurrency,
+    translations.headers.anibisLow, translations.headers.anibisAvg, translations.headers.anibisHigh, translations.headers.anibisCurrency,
+    translations.headers.ebayFrLow, translations.headers.ebayFrAvg, translations.headers.ebayFrHigh, translations.headers.ebayFrCurrency,
   ];
 
   const rows = collection.map(item => {
-    const ebayPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay'));
+    const ebayPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay.com'));
     const ricardoPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ricardo'));
+    const anibisPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('anibis'));
+    const ebayFrPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay.fr'));
 
     return [
       `"${item.title.replace(/"/g, '""')}"`,
@@ -43,6 +55,7 @@ export const exportCollectionToCsv = (collection: GameItem[], translations: CsvE
       `"${item.publisher.replace(/"/g, '""')}"`,
       item.releaseYear,
       item.itemType,
+      item.condition,
       ebayPrice?.low ?? '',
       ebayPrice?.average ?? '',
       ebayPrice?.high ?? '',
@@ -50,7 +63,15 @@ export const exportCollectionToCsv = (collection: GameItem[], translations: CsvE
       ricardoPrice?.low ?? '',
       ricardoPrice?.average ?? '',
       ricardoPrice?.high ?? '',
-      ricardoPrice?.currency ?? ''
+      ricardoPrice?.currency ?? '',
+      anibisPrice?.low ?? '',
+      anibisPrice?.average ?? '',
+      anibisPrice?.high ?? '',
+      anibisPrice?.currency ?? '',
+      ebayFrPrice?.low ?? '',
+      ebayFrPrice?.average ?? '',
+      ebayFrPrice?.high ?? '',
+      ebayFrPrice?.currency ?? ''
     ].join(',');
   });
 
@@ -83,28 +104,43 @@ export const parseCollectionFromCsv = (file: File): Promise<GameItem[]> => {
         const headersLine = lines.shift();
         if (!headersLine) return reject(new Error("csv.errorMissingHeaders"));
         
-        // Use a flexible matching for headers to accommodate different languages
         const headers = headersLine.split(',').map(h => h.trim().toLowerCase());
         
-        // For simplicity in parsing, we'll still rely on the English-like structure internally for price lookups.
-        // A more robust solution might map translated headers back to standard keys.
-        const headerMapping: { [key: string]: string } = {
-          'title': 'title', 'plattform': 'platform', 'platform': 'platform', 'éditeur': 'publisher', 'herausgeber': 'publisher', 'publisher': 'publisher',
-          'release year': 'release year', 'année de sortie': 'release year', 'veröffentlichungsjahr': 'release year',
-          'item type': 'item type', "type d'article": 'item type', 'elementtyp': 'item type',
-          'ebay price (low)': 'ebay price (low)', 'ricardo price (low)': 'ricardo price (low)',
-          'ebay price (avg)': 'ebay price (avg)', 'ricardo price (avg)': 'ricardo price (avg)',
-          'ebay price (high)': 'ebay price (high)', 'ricardo price (high)': 'ricardo price (high)',
-          'ebay currency': 'ebay currency', 'ricardo currency': 'ricardo currency',
+        const getIndex = (keys: string[]) => {
+            for (const key of keys) {
+                const index = headers.findIndex(h => h.includes(key));
+                if (index !== -1) return index;
+            }
+            return -1;
         };
         
-        const mappedHeaders = headers.map(h => {
-             const found = Object.keys(headerMapping).find(key => h.includes(key));
-             return found ? headerMapping[found] : h;
-        });
+        const headerIndices = {
+            title: getIndex(['title', 'titre']),
+            platform: getIndex(['platform', 'plattform', 'plateforme']),
+            publisher: getIndex(['publisher', 'herausgeber', 'éditeur']),
+            releaseYear: getIndex(['release year', 'veröffentlichungsjahr', 'année de sortie']),
+            itemType: getIndex(['item type', 'elementtyp', "type d'article", 'type']),
+            condition: getIndex(['condition', 'zustand', 'état']),
+            ebayComLow: getIndex(['ebay.com price (low)']),
+            ebayComAvg: getIndex(['ebay.com price (avg)']),
+            ebayComHigh: getIndex(['ebay.com price (high)']),
+            ebayComCurrency: getIndex(['ebay.com currency']),
+            ricardoLow: getIndex(['ricardo price (low)']),
+            ricardoAvg: getIndex(['ricardo price (avg)']),
+            ricardoHigh: getIndex(['ricardo price (high)']),
+            ricardoCurrency: getIndex(['ricardo currency']),
+            anibisLow: getIndex(['anibis price (low)']),
+            anibisAvg: getIndex(['anibis price (avg)']),
+            anibisHigh: getIndex(['anibis price (high)']),
+            anibisCurrency: getIndex(['anibis currency']),
+            ebayFrLow: getIndex(['ebay.fr price (low)']),
+            ebayFrAvg: getIndex(['ebay.fr price (avg)']),
+            ebayFrHigh: getIndex(['ebay.fr price (high)']),
+            ebayFrCurrency: getIndex(['ebay.fr currency']),
+        };
 
-        const requiredHeaders = ['title', 'platform', 'publisher', 'release year', 'item type'];
-        if (!requiredHeaders.every(h => mappedHeaders.includes(h))) {
+        const requiredHeaders = ['title', 'platform', 'publisher', 'releaseYear', 'itemType'];
+        if (!requiredHeaders.every(h => headerIndices[h as keyof typeof headerIndices] !== -1)) {
           return reject(new Error(`csv.errorInvalidHeaders`));
         }
   
@@ -121,35 +157,70 @@ export const parseCollectionFromCsv = (file: File): Promise<GameItem[]> => {
             }
             return trimmed;
           });
-  
-          const itemData: { [key: string]: string } = {};
-          mappedHeaders.forEach((header, index) => {
-            itemData[header] = row[index];
-          });
-  
-          const ebayPrice: PriceEstimate = {
-            source: 'eBay',
-            currency: itemData['ebay currency'] || 'USD',
-            low: parseFloat(itemData['ebay price (low)']) || 0,
-            average: parseFloat(itemData['ebay price (avg)']) || 0,
-            high: parseFloat(itemData['ebay price (high)']) || 0,
-          };
-  
-          const ricardoPrice: PriceEstimate = {
-            source: 'Ricardo.ch',
-            currency: itemData['ricardo currency'] || 'CHF',
-            low: parseFloat(itemData['ricardo price (low)']) || 0,
-            average: parseFloat(itemData['ricardo price (avg)']) || 0,
-            high: parseFloat(itemData['ricardo price (high)']) || 0,
-          };
-  
+          
+          const getValue = (index: number) => row[index] || '';
+
+          const estimatedPrices: PriceEstimate[] = [];
+          
+          const ebayComAvg = parseFloat(getValue(headerIndices.ebayComAvg));
+          if (!isNaN(ebayComAvg) && ebayComAvg > 0) {
+              estimatedPrices.push({
+                  source: 'ebay.com',
+                  currency: getValue(headerIndices.ebayComCurrency) || 'USD',
+                  low: parseFloat(getValue(headerIndices.ebayComLow)) || 0,
+                  average: ebayComAvg,
+                  high: parseFloat(getValue(headerIndices.ebayComHigh)) || 0,
+              });
+          }
+          
+          const ricardoAvg = parseFloat(getValue(headerIndices.ricardoAvg));
+          if (!isNaN(ricardoAvg) && ricardoAvg > 0) {
+              estimatedPrices.push({
+                  source: 'ricardo.ch',
+                  currency: getValue(headerIndices.ricardoCurrency) || 'CHF',
+                  low: parseFloat(getValue(headerIndices.ricardoLow)) || 0,
+                  average: ricardoAvg,
+                  high: parseFloat(getValue(headerIndices.ricardoHigh)) || 0,
+              });
+          }
+
+          const anibisAvg = parseFloat(getValue(headerIndices.anibisAvg));
+          if (!isNaN(anibisAvg) && anibisAvg > 0) {
+              estimatedPrices.push({
+                  source: 'anibis.ch',
+                  currency: getValue(headerIndices.anibisCurrency) || 'CHF',
+                  low: parseFloat(getValue(headerIndices.anibisLow)) || 0,
+                  average: anibisAvg,
+                  high: parseFloat(getValue(headerIndices.anibisHigh)) || 0,
+              });
+          }
+
+          const ebayFrAvg = parseFloat(getValue(headerIndices.ebayFrAvg));
+          if (!isNaN(ebayFrAvg) && ebayFrAvg > 0) {
+              estimatedPrices.push({
+                  source: 'ebay.fr',
+                  currency: getValue(headerIndices.ebayFrCurrency) || 'EUR',
+                  low: parseFloat(getValue(headerIndices.ebayFrLow)) || 0,
+                  average: ebayFrAvg,
+                  high: parseFloat(getValue(headerIndices.ebayFrHigh)) || 0,
+              });
+          }
+
+          const itemType = (getValue(headerIndices.itemType) as 'Game' | 'Console' | 'Accessory') || 'Game';
+          const conditionRaw = getValue(headerIndices.condition).toLowerCase();
+          let condition: 'Boxed' | 'Loose' | 'Unknown' = 'Unknown';
+          if (conditionRaw === 'boxed') condition = 'Boxed';
+          if (conditionRaw === 'loose') condition = 'Loose';
+          
+
           const gameItem: GameItem = {
-            title: itemData['title'],
-            platform: itemData['platform'],
-            publisher: itemData['publisher'],
-            releaseYear: parseInt(itemData['release year'], 10),
-            itemType: (itemData['item type'] as 'Game' | 'Console' | 'Accessory') || 'Game',
-            estimatedPrices: [ebayPrice, ricardoPrice].filter(p => p.average > 0),
+            title: getValue(headerIndices.title),
+            platform: getValue(headerIndices.platform),
+            publisher: getValue(headerIndices.publisher),
+            releaseYear: parseInt(getValue(headerIndices.releaseYear), 10),
+            itemType,
+            condition,
+            estimatedPrices,
           };
           
           if (gameItem.title && gameItem.platform && !isNaN(gameItem.releaseYear)) {

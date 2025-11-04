@@ -88,6 +88,8 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ collection }) => {
 
     let totalValueUSD = 0;
     let totalValueCHF = 0;
+    let totalValueAnibisCHF = 0;
+    let totalValueEbayEUR = 0;
     const platformCounts: { [key: string]: number } = {};
     const platformValuesUSD: { [key: string]: number } = {};
     const platformValuesCHF: { [key: string]: number } = {};
@@ -95,11 +97,18 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ collection }) => {
 
     collection.forEach(item => {
       // Aggregate totals using specific sources
-      const ebayPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay'));
+      const ebayPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay.com'));
       if (ebayPrice) totalValueUSD += ebayPrice.average;
       
       const ricardoPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ricardo'));
       if (ricardoPrice) totalValueCHF += ricardoPrice.average;
+      
+      const anibisPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('anibis'));
+      if (anibisPrice) totalValueAnibisCHF += anibisPrice.average;
+
+      const ebayFrPrice = item.estimatedPrices.find(p => p.source.toLowerCase().includes('ebay.fr'));
+      if (ebayFrPrice) totalValueEbayEUR += ebayFrPrice.average;
+
 
       // Aggregate by platform
       platformCounts[item.platform] = (platformCounts[item.platform] || 0) + 1;
@@ -120,6 +129,8 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ collection }) => {
       totalItems: collection.length,
       totalValueUSD,
       totalValueCHF,
+      totalValueAnibisCHF,
+      totalValueEbayEUR,
       platformsByCount: sortedPlatformsByCount,
       platformsByValueUSD: sortedPlatformsByValueUSD,
       platformsByValueCHF: sortedPlatformsByValueCHF,
@@ -151,10 +162,12 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ collection }) => {
             <p className="text-neutral-400 mt-1">{t('analytics.description')}</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard title={t('analytics.totalItems')} value={analyticsData?.totalItems.toString() ?? '0'} />
-            <StatCard title={t('analytics.totalValueUsd')} value={formatCurrency(analyticsData?.totalValueUSD ?? 0, 'USD')} />
-            <StatCard title={t('analytics.totalValueChf')} value={formatCurrency(analyticsData?.totalValueCHF ?? 0, 'CHF')} />
+            <StatCard title={t('analytics.totalValueEbayUsd')} value={formatCurrency(analyticsData?.totalValueUSD ?? 0, 'USD')} />
+            <StatCard title={t('analytics.totalValueRicardoChf')} value={formatCurrency(analyticsData?.totalValueCHF ?? 0, 'CHF')} />
+            <StatCard title={t('analytics.totalValueAnibisChf')} value={formatCurrency(analyticsData?.totalValueAnibisCHF ?? 0, 'CHF')} />
+            <StatCard title={t('analytics.totalValueEbayEur')} value={formatCurrency(analyticsData?.totalValueEbayEUR ?? 0, 'EUR')} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

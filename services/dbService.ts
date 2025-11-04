@@ -1,149 +1,221 @@
 import { GameItem } from '../types';
+import { supabase } from './supabaseClient';
 
-// MOCK DATABASE - In a real app, this logic would be on your backend server.
-const DB_KEY = 'mockUserDB';
-const getDb = () => {
-  const db = localStorage.getItem(DB_KEY);
-  return db ? JSON.parse(db) : {};
+// Type helper for Supabase returns
+type DbPriceEstimate = {
+  id: number;
+  collection_item_id: number;
+  source: string;
+  currency: string;
+  low_price: number;
+  average_price: number;
+  high_price: number;
 };
-const saveDb = (db: any) => {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
-};
-// --- END OF MOCK DATABASE ---
 
-// Helper for mock implementation
-const getItems = async (userId: string, list: 'collection' | 'wishlist'): Promise<GameItem[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const db = getDb();
-      const user = db[userId];
-      if (user && user[list]) {
-        resolve(user[list]);
-      } else {
-        resolve([]);
+type DbCollectionItem = {
+  id: number;
+  title: string;
+  publisher: string;
+  platform: string;
+  release_year: number;
+  item_type: 'Game' | 'Console' | 'Accessory';
+  condition: 'Boxed' | 'Loose' | 'Unknown';
+  price_estimates: DbPriceEstimate[];
+};
+
+const mapDbItemToGameItem = (dbItem: DbCollectionItem): GameItem => ({
+  id: dbItem.id,
+  title: dbItem.title,
+  publisher: dbItem.publisher,
+  platform: dbItem.platform,
+  releaseYear: dbItem.release_year,
+  itemType: dbItem.item_type,
+  condition: dbItem.condition,
+  estimatedPrices: dbItem.price_estimates.map(p => ({
+    source: p.source,
+    currency: p.currency,
+    low: p.low_price,
+    average: p.average_price,
+    high: p.high_price,
+  })),
+});
+
+export const getUserCollection = async (userId: string): Promise<GameItem[]> => {
+  // Step 1: Fetch main collection items.
+  const { data: itemsData, error: itemsError } = await supabase
+    .from('collection_items')
+    .select('*')
+    .eq('user_id', userId);
+  
+  if (itemsError) {
+    console.error("Error fetching collection items:", itemsError);
+    throw new Error(itemsError.message);
+  }
+
+  if (!itemsData || itemsData.length === 0) {
+    return [];
+  }
+
+  const itemIds = itemsData.map(item => item.id);
+
+  // Step 2: Fetch price estimates for those items.
+  const { data: pricesData, error: pricesError } = await supabase
+    .from('price_estimates')
+    .select('*')
+    .in('collection_item_id', itemIds);
+
+  if (pricesError) {
+    console.error("Error fetching price estimates:", pricesError);
+    // Don't throw; we can still show items without prices.
+  }
+
+  // Step 3: Map prices to their respective items for efficient lookup.
+  const pricesMap = new Map<number, DbPriceEstimate[]>();
+  if (pricesData) {
+    for (const price of pricesData) {
+      const id = price.collection_item_id;
+      if (!pricesMap.has(id)) {
+        pricesMap.set(id, []);
       }
-    }, 200);
+      pricesMap.get(id)!.push(price as DbPriceEstimate);
+    }
+  }
+
+  // Step 4: Combine items and their prices, then map to the app's data structure.
+  const collectionWithPrices = itemsData.map(item => {
+    const prices = pricesMap.get(item.id) || [];
+    const dbItem: DbCollectionItem = {
+      ...item,
+      price_estimates: prices,
+    };
+    return mapDbItemToGameItem(dbItem);
   });
+
+  return collectionWithPrices;
 };
 
-export const getUserCollection = (userId: string): Promise<GameItem[]> => {
-    // In a real app, you would fetch this from your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/collection`);
-    if (!response.ok) throw new Error('Failed to fetch collection.');
-    return response.json();
-    */
-    return getItems(userId, 'collection');
+
+export const getUserWishlist = async (userId: string): Promise<GameItem[]> => {
+    const { data, error } = await supabase
+      .from('wishlist_items')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error("Error fetching wishlist:", error);
+      throw new Error(error.message);
+    }
+    // Wishlist items don't have prices, so we add an empty array
+    return data.map(item => ({ ...item, releaseYear: item.release_year, itemType: item.item_type, estimatedPrices: [] }));
 };
 
-export const getUserWishlist = (userId: string): Promise<GameItem[]> => {
-    // In a real app, you would fetch this from your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/wishlist`);
-    if (!response.ok) throw new Error('Failed to fetch wishlist.');
-    return response.json();
-    */
-    return getItems(userId, 'wishlist');
-};
+export const addToCollection = async (userId: string, items: GameItem[]): Promise<void> => {
+    for (const item of items) {
+        const { estimatedPrices, ...itemDetails } = item;
 
-export const addToCollection = (userId: string, items: GameItem[]): Promise<void> => {
-    // In a real app, you would POST this to your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/collection`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items),
-    });
-    if (!response.ok) throw new Error('Failed to add to collection.');
-    return;
-    */
+        // 1. Insert the main item
+        const { data: insertedItem, error: itemError } = await supabase
+            .from('collection_items')
+            .insert({
+                user_id: userId,
+                title: itemDetails.title,
+                publisher: itemDetails.publisher,
+                platform: itemDetails.platform,
+                release_year: itemDetails.releaseYear,
+                item_type: itemDetails.itemType,
+                condition: itemDetails.condition,
+            })
+            .select('id')
+            .single();
 
-    // --- MOCK IMPLEMENTATION ---
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const db = getDb();
-            if (!db[userId]) db[userId] = { password: '', collection: [], wishlist: [] };
+        if (itemError) {
+            console.error('Error inserting collection item:', itemError);
+            continue; // Move to the next item
+        }
+
+        // 2. If item was inserted and has prices, insert prices
+        if (insertedItem && estimatedPrices.length > 0) {
+            const priceInserts = estimatedPrices.map(p => ({
+                collection_item_id: insertedItem.id,
+                source: p.source,
+                currency: p.currency,
+                low_price: p.low,
+                average_price: p.average,
+                high_price: p.high,
+            }));
             
-            const userList = db[userId].collection || [];
-            const itemsWithIds = items.map(item => ({ ...item, id: crypto.randomUUID() }));
-            db[userId].collection = [...userList, ...itemsWithIds];
-            
-            saveDb(db);
-            resolve();
-        }, 200);
-    });
-};
-
-export const addToWishlist = (userId:string, items: GameItem[]): Promise<void> => {
-    // In a real app, you would POST this to your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/wishlist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(items),
-    });
-    if (!response.ok) throw new Error('Failed to add to wishlist.');
-    return;
-    */
-    
-    // --- MOCK IMPLEMENTATION ---
-     return new Promise((resolve) => {
-        setTimeout(() => {
-            const db = getDb();
-            if (!db[userId]) db[userId] = { password: '', collection: [], wishlist: [] };
-
-            const userList = db[userId].wishlist || [];
-            const itemsWithIds = items.map(item => ({ ...item, id: crypto.randomUUID() }));
-            db[userId].wishlist = [...userList, ...itemsWithIds];
-
-            saveDb(db);
-            resolve();
-        }, 200);
-    });
-};
-
-export const removeFromCollection = (userId: string, itemId: string): Promise<void> => {
-    // In a real app, you would send a DELETE request to your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/collection/${itemId}`, {
-        method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to remove from collection.');
-    return;
-    */
-
-    // --- MOCK IMPLEMENTATION ---
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const db = getDb();
-            if (db[userId] && db[userId].collection) {
-                db[userId].collection = db[userId].collection.filter((item: GameItem) => item.id !== itemId);
-                saveDb(db);
+            const { error: priceError } = await supabase
+                .from('price_estimates')
+                .insert(priceInserts);
+                
+            if (priceError) {
+                console.error('Error inserting prices:', priceError);
+                // In a real app, you might want to roll back the item insertion here
             }
-            resolve();
-        }, 200);
-    });
+        }
+    }
 };
 
-export const removeFromWishlist = (userId: string, itemId: string): Promise<void> => {
-    // In a real app, you would send a DELETE request to your backend API:
-    /*
-    const response = await fetch(`/api/users/${userId}/wishlist/${itemId}`, {
-        method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to remove from wishlist.');
-    return;
-    */
+export const addToWishlist = async (userId:string, items: GameItem[]): Promise<void> => {
+    const itemsToInsert = items.map(item => ({
+        user_id: userId,
+        title: item.title,
+        publisher: item.publisher,
+        platform: item.platform,
+        release_year: item.releaseYear,
+        item_type: item.itemType,
+        condition: item.condition,
+    }));
 
-    // --- MOCK IMPLEMENTATION ---
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const db = getDb();
-            if (db[userId] && db[userId].wishlist) {
-                db[userId].wishlist = db[userId].wishlist.filter((item: GameItem) => item.id !== itemId);
-                saveDb(db);
-            }
-            resolve();
-        }, 200);
-    });
+    const { error } = await supabase.from('wishlist_items').insert(itemsToInsert);
+
+    if (error) {
+        console.error("Error adding to wishlist:", error);
+        throw new Error(error.message);
+    }
+};
+
+export const removeFromCollection = async (userId: string, itemId: number): Promise<void> => {
+    const { error } = await supabase
+      .from('collection_items')
+      .delete()
+      .match({ id: itemId, user_id: userId });
+
+    if (error) {
+        console.error("Error removing from collection:", error);
+        throw new Error(error.message);
+    }
+};
+
+export const removeFromWishlist = async (userId: string, itemId: number): Promise<void> => {
+    const { error } = await supabase
+      .from('wishlist_items')
+      .delete()
+      .match({ id: itemId, user_id: userId });
+
+    if (error) {
+        console.error("Error removing from wishlist:", error);
+        throw new Error(error.message);
+    }
+};
+
+export const updateCollectionItem = async (userId: string, updatedItem: GameItem): Promise<void> => {
+    const { id, estimatedPrices, ...detailsToUpdate } = updatedItem;
+
+    const { error } = await supabase
+        .from('collection_items')
+        .update({
+            title: detailsToUpdate.title,
+            publisher: detailsToUpdate.publisher,
+            platform: detailsToUpdate.platform,
+            release_year: detailsToUpdate.releaseYear,
+            item_type: detailsToUpdate.itemType,
+            condition: detailsToUpdate.condition,
+        })
+        .match({ id: id!, user_id: userId });
+
+    if (error) {
+        console.error("Error updating collection item:", error);
+        throw new Error(error.message);
+    }
 };

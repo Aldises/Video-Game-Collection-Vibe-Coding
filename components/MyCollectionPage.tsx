@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { GameItem, PriceEstimate } from '../types';
-import { removeFromCollection, addToCollection } from '../services/dbService';
+import { removeFromCollection, addToCollection, updateCollectionItem } from '../services/dbService';
 import { useUser } from '../hooks/useUser';
 import { exportCollectionToCsv, parseCollectionFromCsv } from '../utils/csvUtils';
 import { ExportIcon } from './icons/ExportIcon';
@@ -8,6 +8,10 @@ import { ImportIcon } from './icons/ImportIcon';
 import { SortIcon } from './icons/SortIcon';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 import { UploadIcon } from './icons/UploadIcon';
+import { EditIcon } from './icons/EditIcon';
+import { SaveIcon } from './icons/SaveIcon';
+import { CancelIcon } from './icons/CancelIcon';
+import { TrashIcon } from './icons/TrashIcon';
 import Loader from './Loader';
 import { useLocalization } from '../hooks/useLocalization';
 
@@ -16,7 +20,7 @@ interface MyCollectionPageProps {
   onDataChange: () => void;
 }
 
-type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher';
+type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition';
 type SortDirection = 'asc' | 'desc';
 
 const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataChange }) => {
@@ -31,6 +35,8 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     releaseYear: ''
   });
   const [isImportView, setIsImportView] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editedItemData, setEditedItemData] = useState<GameItem | null>(null);
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(collection.map(item => item.platform));
@@ -46,11 +52,39 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     setFilters({ title: '', platform: '', publisher: '', releaseYear: '' });
   };
 
-  const handleRemove = async (itemId: string) => {
+  const handleRemove = async (itemId: number) => {
     if (user && window.confirm(t('collection.confirmRemove'))) {
-      await removeFromCollection(user.uid, itemId);
+      await removeFromCollection(user.id, itemId);
       onDataChange();
     }
+  };
+
+  const handleEditClick = (item: GameItem) => {
+    setEditingItemId(item.id!);
+    setEditedItemData(item);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setEditedItemData(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (user && editedItemData) {
+      await updateCollectionItem(user.id, editedItemData);
+      onDataChange();
+      setEditingItemId(null);
+      setEditedItemData(null);
+    }
+  };
+  
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!editedItemData) return;
+    const { name, value } = e.target;
+    setEditedItemData({
+        ...editedItemData,
+        [name]: name === 'releaseYear' ? parseInt(value, 10) || 0 : value,
+    });
   };
 
   const filteredAndSortedCollection = useMemo(() => {
@@ -94,7 +128,7 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
 
   const handleCsvImport = async (items: GameItem[]) => {
       if (user) {
-          await addToCollection(user.uid, items);
+          await addToCollection(user.id, items);
           onDataChange();
           setIsImportView(false);
       }
@@ -108,14 +142,23 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
             publisher: t('tableHeaders.publisher'),
             releaseYear: t('tableHeaders.year'),
             itemType: t('tableHeaders.itemType'),
-            ebayLow: 'eBay Price (Low)',
-            ebayAvg: 'eBay Price (Avg)',
-            ebayHigh: 'eBay Price (High)',
-            ebayCurrency: 'eBay Currency',
+            condition: t('tableHeaders.condition'),
+            ebayComLow: 'eBay.com Price (Low)',
+            ebayComAvg: 'eBay.com Price (Avg)',
+            ebayComHigh: 'eBay.com Price (High)',
+            ebayComCurrency: 'eBay.com Currency',
             ricardoLow: 'Ricardo Price (Low)',
             ricardoAvg: 'Ricardo Price (Avg)',
             ricardoHigh: 'Ricardo Price (High)',
             ricardoCurrency: 'Ricardo Currency',
+            anibisLow: 'Anibis Price (Low)',
+            anibisAvg: 'Anibis Price (Avg)',
+            anibisHigh: 'Anibis Price (High)',
+            anibisCurrency: 'Anibis Currency',
+            ebayFrLow: 'eBay.fr Price (Low)',
+            ebayFrAvg: 'eBay.fr Price (Avg)',
+            ebayFrHigh: 'eBay.fr Price (High)',
+            ebayFrCurrency: 'eBay.fr Currency',
         },
         alertEmpty: t('csv.alertEmptyCollection'),
     };
@@ -200,6 +243,8 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
         </div>
       );
   }
+  
+  const defaultInputClass = "bg-neutral-darker border border-neutral-light/20 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-primary";
 
   return (
     <div className="w-full max-w-7xl animate-fade-in bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
@@ -244,52 +289,86 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                     <SortableHeader headerKey="platform" label={t('tableHeaders.platform')} />
                     <SortableHeader headerKey="publisher" label={t('tableHeaders.publisher')} />
                     <SortableHeader headerKey="releaseYear" label={t('tableHeaders.year')} />
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceUsd')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceChf')}</th>
+                    <SortableHeader headerKey="itemType" label={t('tableHeaders.itemType')} />
+                    <SortableHeader headerKey="condition" label={t('tableHeaders.condition')} />
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
                     <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
                     <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
             </thead>
             <tbody>
                 {filteredAndSortedCollection.map(item => {
+                    const isEditing = editingItemId === item.id;
+                    if (isEditing) {
+                        return (
+                            <tr key={item.id} className="bg-brand-secondary/10 border-b border-brand-secondary/20">
+                                <td className="px-5 py-2"><input type="text" name="title" value={editedItemData?.title} onChange={handleEditChange} className={defaultInputClass} /></td>
+                                <td className="px-5 py-2"><input type="text" name="platform" value={editedItemData?.platform} onChange={handleEditChange} className={defaultInputClass} /></td>
+                                <td className="px-5 py-2"><input type="text" name="publisher" value={editedItemData?.publisher} onChange={handleEditChange} className={defaultInputClass} /></td>
+                                <td className="px-5 py-2"><input type="number" name="releaseYear" value={editedItemData?.releaseYear} onChange={handleEditChange} className={defaultInputClass} /></td>
+                                <td className="px-5 py-2">
+                                    <select name="itemType" value={editedItemData?.itemType} onChange={handleEditChange} className={defaultInputClass}>
+                                        <option value="Game">Game</option>
+                                        <option value="Console">Console</option>
+                                        <option value="Accessory">Accessory</option>
+                                    </select>
+                                </td>
+                                <td className="px-5 py-2">
+                                    <select name="condition" value={editedItemData?.condition} onChange={handleEditChange} className={defaultInputClass}>
+                                        <option value="Boxed">{t('conditions.boxed')}</option>
+                                        <option value="Loose">{t('conditions.loose')}</option>
+                                        <option value="Unknown">{t('conditions.unknown')}</option>
+                                    </select>
+                                </td>
+                                <td colSpan={5} className="px-5 py-2 text-sm text-neutral-400">{t('collection.editingLocked')}</td>
+                                <td className="px-5 py-2 whitespace-nowrap">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={handleSaveEdit} className="text-green-400 hover:text-green-300" title={t('common.save')}><SaveIcon className="h-5 w-5"/></button>
+                                        <button onClick={handleCancelEdit} className="text-neutral-400 hover:text-neutral-300" title={t('common.cancel')}><CancelIcon className="h-5 w-5"/></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        )
+                    }
+
                     const ebaySearchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
                     const ricardoSearchUrl = `https://www.ricardo.ch/fr/s/${encodeURIComponent(`${item.title} ${item.platform}`)}`;
-                    const ebayPrice = getPrice(item.estimatedPrices, 'ebay');
+                    const anibisSearchUrl = `https://www.anibis.ch/fr/s?s=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
+                    const ebayFrSearchUrl = `https://www.ebay.fr/sch/i.html?_nkw=${encodeURIComponent(`${item.title} ${item.platform}`)}`;
+                    
+                    const ebayPrice = getPrice(item.estimatedPrices, 'ebay.com');
                     const ricardoPrice = getPrice(item.estimatedPrices, 'ricardo');
+                    const anibisPrice = getPrice(item.estimatedPrices, 'anibis');
+                    const ebayFrPrice = getPrice(item.estimatedPrices, 'ebay.fr');
 
                     return (
                     <tr key={item.id} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
-                        <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-neutral-light">{item.title}</div>
-                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap"><div className="text-sm font-medium text-neutral-light">{item.title}</div></td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.releaseYear}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">
-                            {ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}
-                        </td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
-                            {ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}
-                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.itemType}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">{ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">{ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">{anibisPrice ? formatCurrency(anibisPrice.average, anibisPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-400">{ebayFrPrice ? formatCurrency(ebayFrPrice.average, ebayFrPrice.currency) : 'N/A'}</td>
                         <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
-                          <div className="flex items-center gap-4">
-                              <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
-                                  eBay
-                                  <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                              </a>
-                              <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
-                                  Ricardo
-                                  <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                              </a>
+                          <div className="flex items-center gap-4 flex-wrap">
+                              <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">eBay.com <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">Ricardo <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">Anibis <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">eBay.fr <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
                           </div>
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap">
-                            <button
-                                onClick={() => handleRemove(item.id!)}
-                                className="text-red-500 hover:text-red-400 text-sm font-medium"
-                            >
-                                {t('common.remove')}
-                            </button>
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => handleEditClick(item)} className="text-neutral-400 hover:text-white" title={t('common.edit')}><EditIcon className="h-5 w-5"/></button>
+                                <button onClick={() => handleRemove(item.id!)} className="text-red-500 hover:text-red-400" title={t('common.remove')}><TrashIcon className="h-5 w-5"/></button>
+                            </div>
                         </td>
                     </tr>
                     );

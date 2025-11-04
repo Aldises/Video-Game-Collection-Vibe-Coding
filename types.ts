@@ -1,5 +1,5 @@
 export interface User {
-  uid: string;
+  id: string;
   email: string | null;
 }
 
@@ -18,12 +18,13 @@ export interface PriceEstimate {
 }
 
 export interface GameItem {
-  id?: string; // Unique ID when saved to the collection
+  id?: number; // Unique ID when saved to the collection
   sourceId?: string; // Temporary unique ID from a scan result for UI key purposes
   title: string;
   publisher: string;
   platform: string;
   releaseYear: number;
   itemType: 'Game' | 'Console' | 'Accessory';
+  condition: 'Boxed' | 'Loose' | 'Unknown';
   estimatedPrices: PriceEstimate[];
 }

@@ -9,7 +9,10 @@
     "inCollection": "In Collection",
     "inWishlist": "In Wishlist",
     "tryAgain": "Try Again",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "nav": {
     "scanner": "Scanner",
@@ -59,16 +62,21 @@
     "addToWishlist": "Add to Wishlist ({count})",
     "scanMore": "Scan More",
     "uploadedImages": "Uploaded Images",
-    "noItemsFound": "No items were identified in the uploaded images."
+    "noItemsFound": "No items were identified in the uploaded images.",
+    "confirmClearAll": "This will remove all uploaded images and clear the scan results. Are you sure?",
+    "deleteImageTooltip": "Clear all images and results"
   },
   "tableHeaders": {
     "title": "Title",
     "platform": "Platform",
     "publisher": "Publisher",
     "year": "Year",
-    "itemType": "Item Type",
-    "priceUsd": "Est. Price (USD)",
-    "priceChf": "Est. Price (CHF)",
+    "itemType": "Type",
+    "condition": "Condition",
+    "priceEbayUsd": "eBay.com (USD)",
+    "priceRicardoChf": "Ricardo (CHF)",
+    "priceAnibisChf": "Anibis (CHF)",
+    "priceEbayEur": "eBay.fr (EUR)",
     "sources": "Sources"
   },
   "collection": {
@@ -88,13 +96,16 @@
     "importBrowse": "browse files",
     "importFormat": "Must follow the format from the CSV export.",
     "importLoader": "Importing your collection, please wait...",
-    "backToCollection": "Back to Collection"
+    "backToCollection": "Back to Collection",
+    "editingLocked": "Pricing data is not editable."
   },
   "wishlist": {
     "title": "My Wishlist ({count})",
     "confirmRemove": "Are you sure you want to remove this item from your wishlist?",
     "noMatch": "No items match your current filters.",
-    "empty": "Your wishlist is empty. Use the Scanner to add items!"
+    "empty": "Your wishlist is empty. Use the Scanner to add items!",
+    "filterItemType": "All Types",
+    "filterCondition": "All Conditions"
   },
   "analytics": {
     "title": "Collection Analytics",
@@ -102,8 +113,10 @@
     "emptyTitle": "Analytics",
     "emptyDesc": "Your collection is empty. Add items via the Scanner to see your stats!",
     "totalItems": "Total Items",
-    "totalValueUsd": "Total Est. Value (eBay USD)",
-    "totalValueChf": "Total Est. Value (Ricardo CHF)",
+    "totalValueEbayUsd": "Value (eBay.com USD)",
+    "totalValueRicardoChf": "Value (Ricardo CHF)",
+    "totalValueAnibisChf": "Value (Anibis CHF)",
+    "totalValueEbayEur": "Value (eBay.fr EUR)",
     "chartPlatformDist": "Platform Distribution",
     "chartValueUsd": "Value by Platform (eBay USD)",
     "chartValueChf": "Value by Platform (Ricardo CHF)",
@@ -120,5 +133,10 @@
     "errorNoValidItems": "No valid items found in the CSV file. Please check the format.",
     "errorUpload": "Please upload a valid .csv file.",
     "alertEmptyCollection": "Your collection is empty."
+  },
+  "conditions": {
+    "boxed": "Boxed",
+    "loose": "Loose",
+    "unknown": "Unknown"
   }
 }

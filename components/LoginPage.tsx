@@ -1,7 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { signIn, signUp } from '../services/authService';
 import { GameControllerIcon } from './icons/GameControllerIcon';
-import { useUser } from '../hooks/useUser';
 import { useLocalization } from '../hooks/useLocalization';
 
 const LoginPage: React.FC = () => {
@@ -10,7 +9,6 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useUser();
   const { t } = useLocalization();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -18,16 +16,22 @@ const LoginPage: React.FC = () => {
     setError(null);
     setIsLoading(true);
     try {
-      let user;
       if (isLogin) {
-        user = await signIn({ email, password });
+        await signIn({ email, password });
       } else {
-        user = await signUp({ email, password });
+        await signUp({ email, password });
       }
-      login(user);
+      // No need to call login(), the onAuthStateChange listener will handle it.
     } catch (err) {
-      const errorMessage = err instanceof Error ? t(err.message) : t('login.errorUnknown');
-      setError(errorMessage);
+      const errorMessage = err instanceof Error ? t(err.message, { message: err.message }) : t('login.errorUnknown');
+      // Supabase might return a generic message, let's provide better ones.
+      if (errorMessage.includes('Invalid login credentials')) {
+        setError(t('login.errorInvalid'));
+      } else if (errorMessage.includes('already be registered')) {
+        setError(t('login.errorExists'));
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

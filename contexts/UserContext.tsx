@@ -1,18 +1,15 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 interface UserContextType {
   user: User | null;
   loading: boolean;
-  login: (user: User) => void;
-  logout: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({ 
   user: null, 
   loading: true,
-  login: () => {},
-  logout: () => {},
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -20,30 +17,28 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = sessionStorage.getItem('currentUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email || null });
       }
-    } catch (error) {
-      console.error("Failed to parse user from session storage", error);
-      sessionStorage.removeItem('currentUser');
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user;
+      setUser(currentUser ? { id: currentUser.id, email: currentUser.email || null } : null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    sessionStorage.setItem('currentUser', JSON.stringify(userData));
-  };
-
-  const logout = () => {
-    setUser(null);
-    sessionStorage.removeItem('currentUser');
-  };
-
   return (
-    <UserContext.Provider value={{ user, loading, login, logout }}>
+    <UserContext.Provider value={{ user, loading }}>
       {children}
     </UserContext.Provider>
   );
