@@ -7,24 +7,13 @@ import Modal from './Modal';
 
 type Mode = 'login' | 'signup' | 'forgotPassword' | 'checkEmail';
 
-interface LoginPageProps {
-    isMfaMode?: boolean;
-    onMfaRequired?: () => void;
-    onMfaCompleted?: () => void;
-    onMfaCancelled?: () => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({
-    isMfaMode = false,
-    onMfaRequired,
-    onMfaCompleted,
-    onMfaCancelled,
-}) => {
+const LoginPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [factorId, setFactorId] = useState<string | null>(null);
+  const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkEmailMessage, setCheckEmailMessage] = useState<string>('');
@@ -40,9 +29,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
         const { mfaRequired, factorId } = await signIn({ email, password });
         if (mfaRequired && factorId) {
             setFactorId(factorId);
-            onMfaRequired?.();
+            setIsMfaModalOpen(true);
+            // The UserContext will keep the user logged out until MFA is verified,
+            // so this component will remain mounted.
         }
-        // If MFA is not required, onAuthStateChange in UserContext will handle the login.
+        // For non-MFA users, the onAuthStateChange in UserContext will handle the login,
+        // causing this component to unmount.
       } else {
         await signUp({ email, password });
         setCheckEmailMessage(t('login.signupSuccess'));
@@ -85,8 +77,9 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setIsLoading(true);
     try {
         await verifyMfa(factorId, mfaCode);
-        onMfaCompleted?.();
-        // onAuthStateChange will now handle setting the user and navigating to the app
+        setIsMfaModalOpen(false);
+        // On success, the onAuthStateChange listener in UserContext will now receive
+        // a session with aal2, set the user, and this component will unmount.
     } catch (err) {
         const errorMessage = err instanceof Error ? t(err.message) : t('login.errorInvalidMfa');
         setError(errorMessage);
@@ -98,8 +91,8 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const handleMfaCancel = async () => {
       setError(null);
       setMfaCode('');
-      await signOut(); // Clean up partial session
-      onMfaCancelled?.();
+      setIsMfaModalOpen(false);
+      await signOut(); // Clean up the partial (aal1) session on the server.
   }
 
   const renderFormContent = () => {
@@ -176,7 +169,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   return (
     <>
     <Modal
-        isOpen={isMfaMode}
+        isOpen={isMfaModalOpen}
         onClose={handleMfaCancel}
         onConfirm={handleMfaSubmit}
         title={t('login.enterMfa')}
