@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { updatePassword } from '../services/authService';
+import { resetUserPassword } from '../services/authService';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import { KeyIcon } from './icons/KeyIcon';
 
@@ -33,7 +33,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ onResetSuccess })
 
         setIsLoading(true);
         try {
-            await updatePassword(newPassword);
+            await resetUserPassword(newPassword);
             setSuccess(true);
         } catch (err) {
             const errorMessage = err instanceof Error ? t(err.message) : t('login.errorUnknown');

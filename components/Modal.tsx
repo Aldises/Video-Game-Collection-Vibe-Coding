@@ -6,12 +6,13 @@ import { WarningIcon } from './icons/WarningIcon';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   title: string;
   children: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   confirmVariant?: 'primary' | 'danger';
+  footer?: React.ReactNode;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -22,7 +23,8 @@ const Modal: React.FC<ModalProps> = ({
   children,
   confirmText,
   cancelText,
-  confirmVariant = 'primary'
+  confirmVariant = 'primary',
+  footer
 }) => {
   const { t } = useLocalization();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,27 @@ const Modal: React.FC<ModalProps> = ({
       primary: 'bg-brand-primary hover:bg-brand-primary/90 text-white',
       danger: 'bg-red-600 hover:bg-red-500 text-white',
   }
+  
+  const defaultFooter = (
+      <>
+        <button
+            type="button"
+            className="w-full sm:w-auto inline-flex justify-center rounded-md bg-white dark:bg-neutral-700 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600"
+            onClick={onClose}
+        >
+            {cancelText || t('common.cancel')}
+        </button>
+        <button
+            type="button"
+            className={`w-full sm:w-auto inline-flex justify-center rounded-md px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${confirmClasses[confirmVariant]}`}
+            onClick={() => {
+                onConfirm?.();
+            }}
+        >
+            {confirmText || t('common.confirm')}
+        </button>
+      </>
+  );
 
   return ReactDOM.createPortal(
     <div
@@ -75,31 +98,15 @@ const Modal: React.FC<ModalProps> = ({
                         {title}
                     </h3>
                     <div className="mt-2">
-                        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                        <div className="text-sm text-neutral-600 dark:text-neutral-300">
                             {children}
-                        </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div className="bg-gray-50 dark:bg-neutral-dark/50 px-4 py-3 sm:px-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-xl">
-          <button
-            type="button"
-            className="w-full sm:w-auto inline-flex justify-center rounded-md bg-white dark:bg-neutral-700 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600"
-            onClick={onClose}
-          >
-            {cancelText || t('common.cancel')}
-          </button>
-          <button
-            type="button"
-            className={`w-full sm:w-auto inline-flex justify-center rounded-md px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${confirmClasses[confirmVariant]}`}
-            onClick={() => {
-                onConfirm();
-                onClose();
-            }}
-          >
-            {confirmText || t('common.confirm')}
-          </button>
+          {footer ? footer : defaultFooter}
         </div>
       </div>
     </div>,

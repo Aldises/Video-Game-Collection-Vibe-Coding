@@ -68,11 +68,20 @@ export const sendPasswordResetEmail = async (email: string): Promise<void> => {
     }
 }
 
+export const resetUserPassword = async (newPassword: string): Promise<void> => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+        throw new Error(error.message);
+    }
+};
+
 export const updatePassword = async (newPassword: string): Promise<void> => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
         throw new Error(error.message);
     }
+    // After a successful password change, sign out to invalidate old tokens.
+    await signOut();
 }
 
 export const verifyMfa = async (factorId: string, code: string): Promise<void> => {
@@ -94,8 +103,8 @@ export const getMfaStatus = async (): Promise<{ isEnabled: boolean; factorId: st
         console.error("Error fetching MFA status:", error);
         return { isEnabled: false, factorId: null };
     }
-    const totpFactor = data.totp[0];
-    return { isEnabled: !!totpFactor && totpFactor.status === 'verified', factorId: totpFactor?.id || null };
+    const totpFactor = data.totp.find(f => f.status === 'verified');
+    return { isEnabled: !!totpFactor, factorId: totpFactor?.id || null };
 };
 
 export const enrollMfa = async () => {
@@ -118,7 +127,10 @@ export const challengeAndVerifyMfa = async (factorId: string, code: string) => {
     if (verifyError) throw new Error(verifyError.message);
 }
 
-export const unenrollMfa = async (factorId: string) => {
+export const verifyAndUnenrollMfa = async (factorId: string, code: string) => {
+    // First, verify the code to get an AAL2 session
+    await challengeAndVerifyMfa(factorId, code);
+    // If verification is successful, unenroll
     const { error } = await supabase.auth.mfa.unenroll({ factorId });
     if (error) throw new Error(error.message);
 }

@@ -35,6 +35,13 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
+    // Manually check the URL hash on initial load to handle redirects correctly.
+    // This is more robust against race conditions where the auth event fires before the listener is attached.
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setAuthFlow('resetPassword');
+    }
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'PASSWORD_RECOVERY') {

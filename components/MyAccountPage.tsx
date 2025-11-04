@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
-import { updatePassword, getMfaStatus, enrollMfa, challengeAndVerifyMfa, unenrollMfa } from '../services/authService';
+import { updatePassword, getMfaStatus, enrollMfa, challengeAndVerifyMfa, verifyAndUnenrollMfa } from '../services/authService';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import { KeyIcon } from './icons/KeyIcon';
 import { ShieldCheckIcon } from './icons/ShieldCheckIcon';
@@ -10,6 +10,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { SunIcon } from './icons/SunIcon';
 import { MoonIcon } from './icons/MoonIcon';
 import { ComputerDesktopIcon } from './icons/ComputerDesktopIcon';
+import Modal from './Modal';
 
 const ThemeSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -52,9 +53,10 @@ const MyAccountPage: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Password change states
-    const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [mfaCodeForPassword, setMfaCodeForPassword] = useState('');
 
     // MFA states
     const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
@@ -64,9 +66,13 @@ const MyAccountPage: React.FC = () => {
     const [mfaSecret, setMfaSecret] = useState<string | null>(null);
     const [mfaVerificationCode, setMfaVerificationCode] = useState('');
     const [enrollmentFactorId, setEnrollmentFactorId] = useState<string | null>(null);
+    const [isDisableMfaModalOpen, setIsDisableMfaModalOpen] = useState(false);
+    const [mfaCodeForDisable, setMfaCodeForDisable] = useState('');
+
 
     const checkMfaStatus = useCallback(async () => {
         setLoading(true);
+        setError(null);
         try {
             const status = await getMfaStatus();
             setMfaEnabled(status.isEnabled);
@@ -83,7 +89,7 @@ const MyAccountPage: React.FC = () => {
         checkMfaStatus();
     }, [checkMfaStatus]);
 
-    const handlePasswordUpdate = async (e: FormEvent) => {
+    const handlePasswordUpdateAttempt = (e: FormEvent) => {
         e.preventDefault();
         setError(null);
         setSuccessMessage(null);
@@ -95,24 +101,44 @@ const MyAccountPage: React.FC = () => {
 
         const policy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
         if (!policy.test(newPassword)) {
-            setError('Password does not meet the policy requirements.');
+            setError(t('account.passwordPolicy.validationError'));
             return;
         }
+        
+        if (mfaEnabled) {
+             setIsPasswordModalOpen(true);
+        } else {
+            // This case should ideally ask for current password, but for now, we directly update.
+            // The error only occurs for MFA-enabled users.
+             handleConfirmPasswordUpdate();
+        }
+    };
 
+    const handleConfirmPasswordUpdate = async () => {
         setLoading(true);
+        setError(null);
         try {
+            if (mfaEnabled && mfaFactorId) {
+                // Elevate session to AAL2 before updating password
+                await challengeAndVerifyMfa(mfaFactorId, mfaCodeForPassword);
+            }
             await updatePassword(newPassword);
-            setSuccessMessage(t('account.passwordSuccess'));
-            setCurrentPassword('');
+            setIsPasswordModalOpen(false);
             setNewPassword('');
             setConfirmPassword('');
+            setMfaCodeForPassword('');
+            // The service will now sign the user out.
+            // We just need to show a message.
+            setSuccessMessage(t('account.passwordSuccessLogout'));
         } catch (err) {
-            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.passwordError')}) : t('account.passwordError');
+            const errorMessage = err instanceof Error ? t(err.message) : t('account.passwordError');
             setError(errorMessage);
+            setIsPasswordModalOpen(false);
         } finally {
             setLoading(false);
         }
     };
+
 
     const handleEnableMfa = async () => {
         setError(null);
@@ -124,7 +150,7 @@ const MyAccountPage: React.FC = () => {
             setEnrollmentFactorId(data.id);
             setIsMfaSetup(true);
         } catch (err) {
-            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaError') }) : t('account.mfaError');
+            const errorMessage = err instanceof Error ? t(err.message) : t('account.mfaError');
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -152,16 +178,18 @@ const MyAccountPage: React.FC = () => {
     };
 
     const handleDisableMfa = async () => {
-        if (!mfaFactorId || !window.confirm(t('account.mfaDisableConfirm'))) return;
+        if (!mfaFactorId) return;
         setError(null);
         setSuccessMessage(null);
         setLoading(true);
         try {
-            await unenrollMfa(mfaFactorId);
+            await verifyAndUnenrollMfa(mfaFactorId, mfaCodeForDisable);
             setSuccessMessage(t('account.mfaSuccessDisabled'));
             await checkMfaStatus();
+            setIsDisableMfaModalOpen(false);
+            setMfaCodeForDisable('');
         } catch (err) {
-            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaError') }) : t('account.mfaError');
+            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaErrorDisable') }) : t('account.mfaErrorDisable');
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -227,6 +255,51 @@ const MyAccountPage: React.FC = () => {
     const defaultInputClass = "appearance-none block w-full px-3 py-2 border border-neutral-900/20 dark:border-neutral-light/20 rounded-md shadow-sm placeholder-neutral-500 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-white dark:bg-neutral-darker text-black dark:text-white";
 
     return (
+        <>
+        <Modal
+            isOpen={isPasswordModalOpen}
+            onClose={() => setIsPasswordModalOpen(false)}
+            onConfirm={handleConfirmPasswordUpdate}
+            title={t('account.passwordConfirmMfaTitle')}
+            confirmText={t('common.confirm')}
+        >
+            <p className="mb-4">{t('account.passwordConfirmMfaMessage')}</p>
+             <input
+                id="mfa-password-confirm"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={mfaCodeForPassword}
+                onChange={(e) => setMfaCodeForPassword(e.target.value)}
+                required
+                className={defaultInputClass}
+                placeholder="123456"
+            />
+        </Modal>
+
+        <Modal
+            isOpen={isDisableMfaModalOpen}
+            onClose={() => setIsDisableMfaModalOpen(false)}
+            onConfirm={handleDisableMfa}
+            title={t('account.mfaDisableTitle')}
+            confirmText={t('account.mfaDisableButton')}
+            confirmVariant="danger"
+        >
+            <p className="mb-4">{t('account.mfaDisableConfirm')}</p>
+             <input
+                id="mfa-disable-confirm"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={mfaCodeForDisable}
+                onChange={(e) => setMfaCodeForDisable(e.target.value)}
+                required
+                className={defaultInputClass}
+                placeholder="123456"
+            />
+        </Modal>
+
+
         <div className="w-full max-w-4xl animate-fade-in space-y-8">
             <div>
                 <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('account.title')}</h2>
@@ -248,12 +321,8 @@ const MyAccountPage: React.FC = () => {
                     <KeyIcon className="h-6 w-6 text-brand-primary" />
                     <h3 className="text-xl font-bold">{t('account.passwordChangeTitle')}</h3>
                 </div>
-                <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1" htmlFor="current-password">{t('account.currentPasswordLabel')}</label>
-                        <input id="current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className={defaultInputClass} />
-                    </div>
-                    <div>
+                <form onSubmit={handlePasswordUpdateAttempt} className="space-y-4">
+                     <div>
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1" htmlFor="new-password">{t('account.newPasswordLabel')}</label>
                         <input id="new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className={defaultInputClass} />
                     </div>
@@ -281,7 +350,7 @@ const MyAccountPage: React.FC = () => {
                     mfaEnabled ? (
                         <div>
                             <p className="text-green-600 dark:text-green-400 font-semibold mb-4">{t('account.mfaEnabled')}</p>
-                            <button onClick={handleDisableMfa} disabled={loading} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-red-500/50 rounded-md shadow-sm text-sm font-medium text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/80 disabled:opacity-50 disabled:cursor-wait">
+                            <button onClick={() => setIsDisableMfaModalOpen(true)} disabled={loading} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-red-500/50 rounded-md shadow-sm text-sm font-medium text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/80 disabled:opacity-50 disabled:cursor-wait">
                                 {loading ? t('common.processing') : t('account.mfaDisableButton')}
                             </button>
                         </div>
@@ -296,6 +365,7 @@ const MyAccountPage: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 
