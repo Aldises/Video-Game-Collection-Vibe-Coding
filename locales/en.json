@@ -12,13 +12,16 @@
     "processing": "Processing...",
     "edit": "Edit",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete"
   },
   "nav": {
     "scanner": "Scanner",
     "collection": "My Collection",
     "wishlist": "My Wishlist",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "account": "My Account"
   },
   "header": {
     "title": "AI Game Scanner",
@@ -39,7 +42,17 @@
     "haveAccount": "Already have an account?",
     "errorInvalid": "Invalid email or password.",
     "errorExists": "Email already exists.",
-    "errorUnknown": "An unknown error occurred."
+    "errorUnknown": "An unknown error occurred.",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "recoverySent": "If an account exists for this email, a recovery link has been sent.",
+    "sendRecovery": "Send Recovery Link",
+    "rememberedPassword": "Remember your password?",
+    "backToLogin": "Back to login",
+    "enterMfa": "Two-Factor Authentication",
+    "mfaCodeLabel": "Authentication Code",
+    "verify": "Verify",
+    "errorInvalidMfa": "Invalid authentication code. Please try again."
   },
   "uploader": {
     "title": "Upload Your Collection",
@@ -63,7 +76,8 @@
     "scanMore": "Scan More",
     "uploadedImages": "Uploaded Images",
     "noItemsFound": "No items were identified in the uploaded images.",
-    "confirmClearAll": "This will remove all uploaded images and clear the scan results. Are you sure?",
+    "confirmClearAllTitle": "Clear Scan Results",
+    "confirmClearAllMessage": "This will remove all uploaded images and clear the scan results. Are you sure?",
     "deleteImageTooltip": "Clear all images and results"
   },
   "tableHeaders": {
@@ -87,7 +101,8 @@
     "filterPlatform": "All Platforms",
     "filterPublisher": "Filter by Publisher...",
     "filterYear": "Filter by Year...",
-    "confirmRemove": "Are you sure you want to remove this item?",
+    "confirmRemoveTitle": "Remove Item",
+    "confirmRemoveMessage": "Are you sure you want to remove this item from your collection?",
     "noMatch": "No items match your current filters.",
     "empty": "Your collection is empty. Use the Scanner to add items!",
     "importTitle": "Import Collection from CSV",
@@ -101,7 +116,8 @@
   },
   "wishlist": {
     "title": "My Wishlist ({count})",
-    "confirmRemove": "Are you sure you want to remove this item from your wishlist?",
+    "confirmRemoveTitle": "Remove Item",
+    "confirmRemoveMessage": "Are you sure you want to remove this item from your wishlist?",
     "noMatch": "No items match your current filters.",
     "empty": "Your wishlist is empty. Use the Scanner to add items!",
     "filterItemType": "All Types",
@@ -138,5 +154,61 @@
     "boxed": "Boxed",
     "loose": "Loose",
     "unknown": "Unknown"
+  },
+  "account": {
+    "title": "My Account",
+    "description": "Manage your account settings and security.",
+    "passwordChangeTitle": "Change Password",
+    "currentPasswordLabel": "Current Password",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "updatePasswordButton": "Update Password",
+    "passwordSuccess": "Password updated successfully.",
+    "passwordError": "Failed to update password. Please check your current password.",
+    "passwordMismatch": "New passwords do not match.",
+    "mfaTitle": "Two-Factor Authentication (2FA)",
+    "mfaDescription": "Add an extra layer of security to your account.",
+    "mfaEnabled": "2FA is currently enabled.",
+    "mfaDisabled": "2FA is currently disabled.",
+    "mfaEnableButton": "Enable 2FA",
+    "mfaDisableButton": "Disable 2FA",
+    "mfaDisableConfirm": "Are you sure you want to disable 2FA? This will reduce your account security.",
+    "mfaSetupTitle": "Set up Two-Factor Authentication",
+    "mfaSetupStep1": "1. Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).",
+    "mfaSetupStep2": "Or enter this secret key manually:",
+    "mfaSetupStep3": "2. Enter the 6-digit code from your app to verify.",
+    "mfaVerificationCodeLabel": "Verification Code",
+    "mfaVerifyButton": "Verify & Enable",
+    "mfaSuccessEnabled": "2FA has been successfully enabled.",
+    "mfaSuccessDisabled": "2FA has been successfully disabled.",
+    "mfaError": "Failed to verify code. Please try again.",
+    "copySuccess": "Copied to clipboard!",
+    "copyFail": "Failed to copy.",
+    "passwordPolicy": {
+      "title": "Password must contain:",
+      "length": "At least 8 characters",
+      "lowercase": "A lowercase letter",
+      "uppercase": "An uppercase letter",
+      "number": "A number",
+      "special": "A special character (!@#$%^&*)"
+    },
+    "themeTitle": "Appearance",
+    "themeDescription": "Choose how the application looks.",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "authFlows": {
+    "emailConfirmedTitle": "Email Confirmed!",
+    "emailConfirmedMessage": "Your account has been successfully verified. You can now log in and start managing your collection.",
+    "goToAppButton": "Go to the App",
+    "passwordResetTitle": "Reset Your Password",
+    "passwordResetDescription": "Enter a new secure password for your account.",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "resetPasswordButton": "Set New Password",
+    "passwordResetSuccess": "Your password has been successfully reset. You can now log in with your new password.",
+    "backToLoginButton": "Back to Login",
+    "passwordMismatch": "The new passwords do not match."
   }
 }

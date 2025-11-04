@@ -60,8 +60,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
 
   return (
     <div className="w-full max-w-3xl text-center animate-fade-in">
-      <h2 className="text-4xl font-extrabold text-neutral-light mb-2">{t('uploader.title')}</h2>
-      <p className="text-lg text-neutral-400 mb-8">{t('uploader.description')}</p>
+      <h2 className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-light mb-2">{t('uploader.title')}</h2>
+      <p className="text-lg text-neutral-500 dark:text-neutral-400 mb-8">{t('uploader.description')}</p>
       <div
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
@@ -70,7 +70,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
         className={`relative block w-full border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ease-in-out
           ${isDragging 
             ? 'border-brand-primary bg-brand-primary/10 ring-4 ring-brand-primary/20' 
-            : 'border-neutral-light/20 hover:border-brand-secondary/70'
+            : 'border-neutral-900/20 dark:border-neutral-light/20 hover:border-brand-secondary/70'
           }`}
       >
         <input
@@ -82,16 +82,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
           className="hidden"
         />
         <div className="flex flex-col items-center justify-center">
-            <div className={`p-4 rounded-full transition-colors duration-300 ${isDragging ? 'bg-brand-primary/20' : 'bg-white/5'}`}>
-                <UploadIcon className={`h-12 w-12 transition-colors duration-300 ${isDragging ? 'text-brand-primary' : 'text-neutral-400'}`} />
+            <div className={`p-4 rounded-full transition-colors duration-300 ${isDragging ? 'bg-brand-primary/20' : 'bg-black/5 dark:bg-white/5'}`}>
+                <UploadIcon className={`h-12 w-12 transition-colors duration-300 ${isDragging ? 'text-brand-primary' : 'text-neutral-500 dark:text-neutral-400'}`} />
             </div>
-            <span className="mt-6 block text-md font-semibold text-neutral-light">
+            <span className="mt-6 block text-md font-semibold text-neutral-900 dark:text-neutral-light">
             {t('uploader.dropOrBrowse')}{' '}
             <button onClick={onBrowseClick} type="button" className="font-semibold bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 transition-opacity focus:outline-none">
                 {t('uploader.browseFiles')}
             </button>
             </span>
-            <p className="mt-1 block text-sm text-neutral-500">{t('uploader.supports')}</p>
+            <p className="mt-1 block text-sm text-neutral-400 dark:text-neutral-500">{t('uploader.supports')}</p>
         </div>
       </div>
     </div>

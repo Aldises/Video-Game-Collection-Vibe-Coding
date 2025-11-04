@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
   const { t } = useLocalization();
   return (
     <footer className="mt-auto">
-      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-neutral-500 text-xs">
+      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-neutral-400 dark:text-neutral-500 text-xs">
         <p>{t('footer.poweredBy')}</p>
       </div>
     </footer>

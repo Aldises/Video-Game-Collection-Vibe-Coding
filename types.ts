@@ -9,6 +9,12 @@ export interface AuthCredentials {
   password: string;
 }
 
+export interface SignInResult {
+    user: User;
+    mfaRequired: boolean;
+    factorId?: string;
+}
+
 export interface PriceEstimate {
   source: string; // e.g., 'eBay', 'Ricardo'
   currency: string; // e.g., 'USD', 'CHF'

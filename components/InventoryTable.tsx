@@ -3,6 +3,7 @@ import { GameItem, PriceEstimate } from '../types';
 import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../hooks/useLocalization';
+import Modal from './Modal';
 
 interface InventoryTableProps {
   inventory: GameItem[];
@@ -24,6 +25,7 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     onAddToWishlist,
 }) => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const { t } = useLocalization();
   
   const formatCurrency = (value: number, currency: string) => {
@@ -64,29 +66,34 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
     }
     setSelectedItems(new Set());
   };
-
-  const handleDeleteAll = () => {
-    if (window.confirm(t('scanResults.confirmClearAll'))) {
-        onReset();
-    }
-  };
   
   return (
-    <div className="w-full bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
+    <>
+    <Modal
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={onReset}
+        title={t('scanResults.confirmClearAllTitle')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+    >
+        {t('scanResults.confirmClearAllMessage')}
+    </Modal>
+    <div className="w-full bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-light">{t('scanResults.title')}</h2>
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('scanResults.title')}</h2>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <button
                 onClick={() => handleAddClick('collection')}
                 disabled={selectedItems.size === 0}
-                className="bg-sky-600 hover:bg-sky-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+                className="bg-sky-600 hover:bg-sky-500 disabled:bg-neutral-500 dark:disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
                 {t('scanResults.addToCollection', { count: selectedItems.size })}
             </button>
             <button
                 onClick={() => handleAddClick('wishlist')}
                 disabled={selectedItems.size === 0}
-                className="bg-amber-600 hover:bg-amber-500 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+                className="bg-amber-600 hover:bg-amber-500 disabled:bg-neutral-500 dark:disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
                 {t('scanResults.addToWishlist', { count: selectedItems.size })}
             </button>
@@ -101,13 +108,13 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
 
       {imagePreviews.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4 text-neutral-200">{t('scanResults.uploadedImages')}</h3>
+            <h3 className="text-xl font-semibold mb-4 text-neutral-800 dark:text-neutral-200">{t('scanResults.uploadedImages')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {imagePreviews.map((src, index) => (
                 <div key={index} className="relative group">
                     <img src={src} alt={`Uploaded collection preview ${index + 1}`} className="rounded-lg w-full object-cover aspect-square shadow-lg" />
                     <button
-                        onClick={handleDeleteAll}
+                        onClick={() => setIsClearModalOpen(true)}
                         title={t('scanResults.deleteImageTooltip')}
                         className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 focus:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                         aria-label={t('scanResults.deleteImageTooltip')}
@@ -123,21 +130,21 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-neutral-light/10">
+            <tr className="border-b border-neutral-900/10 dark:border-neutral-light/10">
               <th scope="col" className="p-4">
                 <input type="checkbox" onChange={handleSelectAll} className="rounded" />
               </th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.title')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.platform')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.publisher')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.itemType')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.condition')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.status')}</th>
-              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.title')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.platform')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.publisher')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.itemType')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.condition')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('common.status')}</th>
+              <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
             </tr>
           </thead>
           <tbody>
@@ -157,49 +164,49 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
               const inWishlist = wishlistTitles.has(itemKey);
 
               return (
-              <tr key={item.sourceId} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
+              <tr key={item.sourceId} className="transition-colors border-b border-neutral-900/10 dark:border-neutral-light/10 hover:bg-black/5 dark:hover:bg-white/5">
                 <td className="p-4">
                     <input type="checkbox" checked={selectedItems.has(item.sourceId!)} onChange={() => handleSelect(item.sourceId!)} className="rounded" />
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-neutral-light">{item.title}</div>
-                    <div className="text-xs text-neutral-400">{item.releaseYear}</div>
+                    <div className="text-sm font-medium text-neutral-900 dark:text-neutral-light">{item.title}</div>
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400">{item.releaseYear}</div>
                 </td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.itemType}</td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.platform}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.publisher}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.itemType}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
+                <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">
                     {ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}
                 </td>
-                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-600 dark:text-sky-400">
                     {ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}
                 </td>
-                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-600 dark:text-sky-400">
                     {anibisPrice ? formatCurrency(anibisPrice.average, anibisPrice.currency) : 'N/A'}
                 </td>
-                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-400">
+                 <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-600 dark:text-purple-400">
                     {ebayFrPrice ? formatCurrency(ebayFrPrice.average, ebayFrPrice.currency) : 'N/A'}
                 </td>
                 <td className="px-5 py-4 whitespace-nowrap text-sm">
-                    {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-800 text-sky-100">{t('common.inCollection')}</span>}
-                    {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-800 text-amber-100">{t('common.inWishlist')}</span>}
+                    {inCollection && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky-100 text-sky-800 dark:bg-sky-800 dark:text-sky-100">{t('common.inCollection')}</span>}
+                    {inWishlist && <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100">{t('common.inWishlist')}</span>}
                 </td>
-                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
+                <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">
                     <div className="flex items-center gap-4 flex-wrap">
-                        <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                        <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">
                             eBay.com
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
-                         <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                         <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">
                             Ricardo
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
-                        <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                        <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">
                             Anibis
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
-                        <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">
+                        <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">
                             eBay.fr
                             <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </a>
@@ -213,10 +220,11 @@ const InventoryTable: React.FC<InventoryTableProps> = ({
       </div>
        {inventory.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">{t('scanResults.noItemsFound')}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('scanResults.noItemsFound')}</p>
          </div>
        )}
     </div>
+    </>
   );
 };
 

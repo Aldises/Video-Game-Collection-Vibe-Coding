@@ -11,11 +11,15 @@ import LoginPage from './components/LoginPage';
 import MyCollectionPage from './components/MyCollectionPage';
 import MyWishlistPage from './components/MyWishlistPage';
 import AnalyticsPage from './components/AnalyticsPage';
+import MyAccountPage from './components/MyAccountPage';
+import EmailConfirmedPage from './components/EmailConfirmedPage';
+import PasswordResetPage from './components/PasswordResetPage';
 import { useUser } from './hooks/useUser';
 import { getUserCollection, getUserWishlist, addToCollection, addToWishlist } from './services/dbService';
 import { useLocalization } from './hooks/useLocalization';
+import { supabase } from './services/supabaseClient';
 
-type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics';
+export type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account';
 
 const App: React.FC = () => {
   const { user, loading } = useUser();
@@ -27,6 +31,23 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<Page>('scanner');
+  const [authFlow, setAuthFlow] = useState<'idle' | 'resetPassword' | 'confirmed'>('idle');
+
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+            setAuthFlow('resetPassword');
+        } else if (event === 'SIGNED_IN' && sessionStorage.getItem('awaiting_confirmation')) {
+            setAuthFlow('confirmed');
+            sessionStorage.removeItem('awaiting_confirmation');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const refetchData = useCallback(async () => {
     if (user) {
@@ -100,9 +121,9 @@ const App: React.FC = () => {
     }
     if (error) {
         return (
-            <div className="text-center p-8 bg-neutral-dark/50 backdrop-blur-sm border border-red-500/50 rounded-xl max-w-2xl w-full animate-fade-in">
-                <h2 className="text-2xl font-bold text-red-400 mb-4">{t('scanner.errorTitle')}</h2>
-                <p className="text-neutral-300 mb-6">{error}</p>
+            <div className="text-center p-8 bg-red-100 dark:bg-neutral-dark/50 backdrop-blur-sm border border-red-500 rounded-xl max-w-2xl w-full animate-fade-in">
+                <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-4">{t('scanner.errorTitle')}</h2>
+                <p className="text-red-800 dark:text-neutral-300 mb-6">{error}</p>
                 <button
                     onClick={handleResetScanner}
                     className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity"
@@ -140,17 +161,32 @@ const App: React.FC = () => {
             return <MyWishlistPage wishlist={wishlist} onDataChange={refetchData} />;
         case 'analytics':
             return <AnalyticsPage collection={collection} />;
+        case 'account':
+            return <MyAccountPage />;
         default:
             return renderScannerPage();
     }
   }
+  
+  if (authFlow === 'resetPassword') {
+    return <PasswordResetPage onResetSuccess={() => {
+        setAuthFlow('idle');
+        window.location.hash = '';
+    }} />;
+  }
+  if (authFlow === 'confirmed') {
+      return <EmailConfirmedPage onContinue={() => {
+          setAuthFlow('idle');
+          window.location.hash = '';
+      }} />;
+  }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-neutral-darker"><Loader message="Initializing..." /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-neutral-light dark:bg-neutral-darker"><Loader message="Initializing..." /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-darker text-neutral-light flex flex-col font-sans">
+    <div className="min-h-screen bg-neutral-light dark:bg-neutral-darker text-neutral-darker dark:text-neutral-light flex flex-col font-sans">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
         {!user ? <LoginPage /> : renderContent()}

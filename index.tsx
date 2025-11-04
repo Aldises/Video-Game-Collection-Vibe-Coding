@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { UserProvider } from './contexts/UserContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,10 +13,12 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <LanguageProvider>
-      <UserProvider>
-        <App />
-      </UserProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <UserProvider>
+          <App />
+        </UserProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

@@ -13,6 +13,7 @@ import { SaveIcon } from './icons/SaveIcon';
 import { CancelIcon } from './icons/CancelIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import Loader from './Loader';
+import Modal from './Modal';
 import { useLocalization } from '../hooks/useLocalization';
 
 interface MyCollectionPageProps {
@@ -37,6 +38,7 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
   const [isImportView, setIsImportView] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedItemData, setEditedItemData] = useState<GameItem | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<number | null>(null);
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(collection.map(item => item.platform));
@@ -52,10 +54,11 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     setFilters({ title: '', platform: '', publisher: '', releaseYear: '' });
   };
 
-  const handleRemove = async (itemId: number) => {
-    if (user && window.confirm(t('collection.confirmRemove'))) {
-      await removeFromCollection(user.id, itemId);
+  const handleRemove = async () => {
+    if (user && itemToRemove !== null) {
+      await removeFromCollection(user.id, itemToRemove);
       onDataChange();
+      setItemToRemove(null);
     }
   };
 
@@ -166,7 +169,7 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
   }
 
   const SortableHeader: React.FC<{ headerKey: SortKey, label: string }> = ({ headerKey, label }) => (
-    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
         <button onClick={() => handleSort(headerKey)} className="flex items-center gap-1 group">
             {label}
             {sortKey === headerKey && <SortIcon className={`h-4 w-4 transition-transform ${sortDirection === 'asc' ? 'rotate-180' : ''}`} />}
@@ -214,23 +217,23 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     
     return (
         <div className="w-full max-w-3xl text-center animate-fade-in">
-            <h2 className="text-4xl font-extrabold text-neutral-light mb-2">{t('collection.importTitle')}</h2>
-            <p className="text-lg text-neutral-400 mb-8">{t('collection.importDesc')}</p>
+            <h2 className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-light mb-2">{t('collection.importTitle')}</h2>
+            <p className="text-lg text-neutral-500 dark:text-neutral-400 mb-8">{t('collection.importDesc')}</p>
             <div
                 onDragEnter={handleDragIn} onDragLeave={handleDragOut} onDragOver={handleDrag} onDrop={handleDrop}
-                className={`relative block w-full border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ease-in-out ${isDragging ? 'border-brand-primary bg-brand-primary/10 ring-4 ring-brand-primary/20' : 'border-neutral-light/20 hover:border-brand-secondary/70'}`}
+                className={`relative block w-full border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ease-in-out ${isDragging ? 'border-brand-primary bg-brand-primary/10 ring-4 ring-brand-primary/20' : 'border-neutral-900/20 dark:border-neutral-light/20 hover:border-brand-secondary/70'}`}
             >
                 <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
                 <div className="flex flex-col items-center justify-center">
-                    <div className={`p-4 rounded-full transition-colors duration-300 ${isDragging ? 'bg-brand-primary/20' : 'bg-white/5'}`}><UploadIcon className={`h-12 w-12 transition-colors duration-300 ${isDragging ? 'text-brand-primary' : 'text-neutral-400'}`} /></div>
-                    <span className="mt-6 block text-md font-semibold text-neutral-light">
+                    <div className={`p-4 rounded-full transition-colors duration-300 ${isDragging ? 'bg-brand-primary/20' : 'bg-black/5 dark:bg-white/5'}`}><UploadIcon className={`h-12 w-12 transition-colors duration-300 ${isDragging ? 'text-brand-primary' : 'text-neutral-500 dark:text-neutral-400'}`} /></div>
+                    <span className="mt-6 block text-md font-semibold text-neutral-900 dark:text-neutral-light">
                         {t('collection.importDrop')}{' '}
                         <button onClick={() => fileInputRef.current?.click()} type="button" className="font-semibold bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 transition-opacity focus:outline-none">{t('collection.importBrowse')}</button>
                     </span>
-                    <p className="mt-1 block text-sm text-neutral-500">{t('collection.importFormat')}</p>
+                    <p className="mt-1 block text-sm text-neutral-400 dark:text-neutral-500">{t('collection.importFormat')}</p>
                 </div>
             </div>
-            {error && <p className="text-red-400 mt-4">{error}</p>}
+            {error && <p className="text-red-600 dark:text-red-400 mt-4">{error}</p>}
             <button onClick={() => setIsImportView(false)} className="mt-8 bg-neutral-600 hover:bg-neutral-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">{t('collection.backToCollection')}</button>
         </div>
     );
@@ -238,18 +241,29 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
 
   if (isImportView) {
       return (
-        <div className="w-full max-w-7xl animate-fade-in bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+        <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8 flex items-center justify-center">
           <CsvImportView />
         </div>
       );
   }
   
-  const defaultInputClass = "bg-neutral-darker border border-neutral-light/20 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-primary";
+  const defaultInputClass = "bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-2 py-1 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-primary";
 
   return (
-    <div className="w-full max-w-7xl animate-fade-in bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
+    <>
+    <Modal
+        isOpen={itemToRemove !== null}
+        onClose={() => setItemToRemove(null)}
+        onConfirm={handleRemove}
+        title={t('collection.confirmRemoveTitle')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+    >
+        {t('collection.confirmRemoveMessage')}
+    </Modal>
+    <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-light">{t('collection.title', { count: filteredAndSortedCollection.length })}</h2>
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('collection.title', { count: filteredAndSortedCollection.length })}</h2>
         <div className="flex items-center gap-4">
             <button
                 onClick={() => setIsImportView(true)}
@@ -268,15 +282,15 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
         </div>
       </div>
 
-      <div className="mb-6 p-4 bg-neutral-dark/30 rounded-lg border border-neutral-light/10">
+      <div className="mb-6 p-4 bg-gray-200/30 dark:bg-neutral-dark/30 rounded-lg border border-neutral-900/10 dark:border-neutral-light/10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <input type="text" name="title" placeholder={t('collection.filterTitle')} value={filters.title} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-              <select name="platform" value={filters.platform} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
+              <input type="text" name="title" placeholder={t('collection.filterTitle')} value={filters.title} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <select name="platform" value={filters.platform} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
                   <option value="">{t('collection.filterPlatform')}</option>
                   {uniquePlatforms.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <input type="text" name="publisher" placeholder={t('collection.filterPublisher')} value={filters.publisher} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-              <input type="text" name="releaseYear" placeholder={t('collection.filterYear')} value={filters.releaseYear} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <input type="text" name="publisher" placeholder={t('collection.filterPublisher')} value={filters.publisher} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <input type="text" name="releaseYear" placeholder={t('collection.filterYear')} value={filters.releaseYear} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
               <button onClick={resetFilters} className="bg-neutral-600 hover:bg-neutral-500 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">{t('common.clear')}</button>
           </div>
       </div>
@@ -284,19 +298,19 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
       <div className="overflow-x-auto">
         <table className="min-w-full">
             <thead>
-                <tr className="border-b border-neutral-light/10">
+                <tr className="border-b border-neutral-900/10 dark:border-neutral-light/10">
                     <SortableHeader headerKey="title" label={t('tableHeaders.title')} />
                     <SortableHeader headerKey="platform" label={t('tableHeaders.platform')} />
                     <SortableHeader headerKey="publisher" label={t('tableHeaders.publisher')} />
                     <SortableHeader headerKey="releaseYear" label={t('tableHeaders.year')} />
                     <SortableHeader headerKey="itemType" label={t('tableHeaders.itemType')} />
                     <SortableHeader headerKey="condition" label={t('tableHeaders.condition')} />
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayUsd')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceRicardoChf')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceAnibisChf')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.priceEbayEur')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('tableHeaders.sources')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -323,11 +337,11 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                                         <option value="Unknown">{t('conditions.unknown')}</option>
                                     </select>
                                 </td>
-                                <td colSpan={5} className="px-5 py-2 text-sm text-neutral-400">{t('collection.editingLocked')}</td>
+                                <td colSpan={5} className="px-5 py-2 text-sm text-neutral-500 dark:text-neutral-400">{t('collection.editingLocked')}</td>
                                 <td className="px-5 py-2 whitespace-nowrap">
                                     <div className="flex items-center gap-3">
-                                        <button onClick={handleSaveEdit} className="text-green-400 hover:text-green-300" title={t('common.save')}><SaveIcon className="h-5 w-5"/></button>
-                                        <button onClick={handleCancelEdit} className="text-neutral-400 hover:text-neutral-300" title={t('common.cancel')}><CancelIcon className="h-5 w-5"/></button>
+                                        <button onClick={handleSaveEdit} className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300" title={t('common.save')}><SaveIcon className="h-5 w-5"/></button>
+                                        <button onClick={handleCancelEdit} className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300" title={t('common.cancel')}><CancelIcon className="h-5 w-5"/></button>
                                     </div>
                                 </td>
                             </tr>
@@ -345,29 +359,29 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                     const ebayFrPrice = getPrice(item.estimatedPrices, 'ebay.fr');
 
                     return (
-                    <tr key={item.id} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
-                        <td className="px-5 py-4 whitespace-nowrap"><div className="text-sm font-medium text-neutral-light">{item.title}</div></td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.releaseYear}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.itemType}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-400">{ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">{ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-400">{anibisPrice ? formatCurrency(anibisPrice.average, anibisPrice.currency) : 'N/A'}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-400">{ebayFrPrice ? formatCurrency(ebayFrPrice.average, ebayFrPrice.currency) : 'N/A'}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">
+                    <tr key={item.id} className="transition-colors border-b border-neutral-900/10 dark:border-neutral-light/10 hover:bg-black/5 dark:hover:bg-white/5">
+                        <td className="px-5 py-4 whitespace-nowrap"><div className="text-sm font-medium text-neutral-900 dark:text-neutral-light">{item.title}</div></td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.platform}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.publisher}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.releaseYear}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.itemType}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">{ebayPrice ? formatCurrency(ebayPrice.average, ebayPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-600 dark:text-sky-400">{ricardoPrice ? formatCurrency(ricardoPrice.average, ricardoPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-sky-600 dark:text-sky-400">{anibisPrice ? formatCurrency(anibisPrice.average, anibisPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-semibold text-purple-600 dark:text-purple-400">{ebayFrPrice ? formatCurrency(ebayFrPrice.average, ebayFrPrice.currency) : 'N/A'}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">
                           <div className="flex items-center gap-4 flex-wrap">
-                              <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">eBay.com <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
-                              <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">Ricardo <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
-                              <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">Anibis <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
-                              <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors group">eBay.fr <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={ebaySearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">eBay.com <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={ricardoSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">Ricardo <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={anibisSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">Anibis <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
+                              <a href={ebayFrSearchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sky-500 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 transition-colors group">eBay.fr <ExternalLinkIcon className="h-4 w-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></a>
                           </div>
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => handleEditClick(item)} className="text-neutral-400 hover:text-white" title={t('common.edit')}><EditIcon className="h-5 w-5"/></button>
-                                <button onClick={() => handleRemove(item.id!)} className="text-red-500 hover:text-red-400" title={t('common.remove')}><TrashIcon className="h-5 w-5"/></button>
+                                <button onClick={() => handleEditClick(item)} className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white" title={t('common.edit')}><EditIcon className="h-5 w-5"/></button>
+                                <button onClick={() => setItemToRemove(item.id!)} className="text-red-500 hover:text-red-400" title={t('common.remove')}><TrashIcon className="h-5 w-5"/></button>
                             </div>
                         </td>
                     </tr>
@@ -378,15 +392,16 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
       </div>
       {collection.length > 0 && filteredAndSortedCollection.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-neutral-400">{t('collection.noMatch')}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('collection.noMatch')}</p>
          </div>
       )}
       {collection.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">{t('collection.empty')}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('collection.empty')}</p>
          </div>
        )}
     </div>
+    </>
   );
 };
 

@@ -12,13 +12,16 @@
     "processing": "Traitement...",
     "edit": "Modifier",
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer"
   },
   "nav": {
     "scanner": "Scanner",
     "collection": "Ma Collection",
     "wishlist": "Ma Liste de Souhaits",
-    "analytics": "Analyses"
+    "analytics": "Analyses",
+    "account": "Mon Compte"
   },
   "header": {
     "title": "Scanner de Jeux IA",
@@ -39,7 +42,17 @@
     "haveAccount": "Vous avez déjà un compte ?",
     "errorInvalid": "E-mail ou mot de passe invalide.",
     "errorExists": "Cet e-mail existe déjà.",
-    "errorUnknown": "Une erreur inconnue est survenue."
+    "errorUnknown": "Une erreur inconnue est survenue.",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "recoverySent": "Si un compte existe pour cet e-mail, un lien de récupération a été envoyé.",
+    "sendRecovery": "Envoyer le lien de récupération",
+    "rememberedPassword": "Vous vous souvenez de votre mot de passe ?",
+    "backToLogin": "Retour à la connexion",
+    "enterMfa": "Authentification à deux facteurs",
+    "mfaCodeLabel": "Code d'authentification",
+    "verify": "Vérifier",
+    "errorInvalidMfa": "Code d'authentification invalide. Veuillez réessayer."
   },
   "uploader": {
     "title": "Téléchargez Votre Collection",
@@ -63,7 +76,8 @@
     "scanMore": "Scanner plus",
     "uploadedImages": "Images téléchargées",
     "noItemsFound": "Aucun article n'a été identifié dans les images téléchargées.",
-    "confirmClearAll": "Ceci supprimera toutes les images téléchargées et effacera les résultats du scan. Êtes-vous sûr ?",
+    "confirmClearAllTitle": "Effacer les résultats du scan",
+    "confirmClearAllMessage": "Ceci supprimera toutes les images téléchargées et effacera les résultats du scan. Êtes-vous sûr ?",
     "deleteImageTooltip": "Effacer toutes les images et résultats"
   },
   "tableHeaders": {
@@ -87,7 +101,8 @@
     "filterPlatform": "Toutes plateformes",
     "filterPublisher": "Filtrer par Éditeur...",
     "filterYear": "Filtrer par Année...",
-    "confirmRemove": "Êtes-vous sûr de vouloir retirer cet article ?",
+    "confirmRemoveTitle": "Supprimer l'article",
+    "confirmRemoveMessage": "Êtes-vous sûr de vouloir retirer cet article de votre collection ?",
     "noMatch": "Aucun article ne correspond à vos filtres actuels.",
     "empty": "Votre collection est vide. Utilisez le Scanner pour ajouter des articles !",
     "importTitle": "Importer la collection depuis un CSV",
@@ -101,7 +116,8 @@
   },
   "wishlist": {
     "title": "Ma Liste de Souhaits ({count})",
-    "confirmRemove": "Êtes-vous sûr de vouloir retirer cet article de votre liste de souhaits ?",
+    "confirmRemoveTitle": "Supprimer l'article",
+    "confirmRemoveMessage": "Êtes-vous sûr de vouloir retirer cet article de votre liste de souhaits ?",
     "noMatch": "Aucun article ne correspond à vos filtres actuels.",
     "empty": "Votre liste de souhaits est vide. Utilisez le Scanner pour ajouter des articles !",
     "filterItemType": "Tous types",
@@ -138,5 +154,61 @@
     "boxed": "En boîte",
     "loose": "En vrac",
     "unknown": "Inconnu"
+  },
+  "account": {
+    "title": "Mon Compte",
+    "description": "Gérez les paramètres et la sécurité de votre compte.",
+    "passwordChangeTitle": "Changer le mot de passe",
+    "currentPasswordLabel": "Mot de passe actuel",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+    "updatePasswordButton": "Mettre à jour le mot de passe",
+    "passwordSuccess": "Mot de passe mis à jour avec succès.",
+    "passwordError": "Échec de la mise à jour du mot de passe. Veuillez vérifier votre mot de passe actuel.",
+    "passwordMismatch": "Les nouveaux mots de passe ne correspondent pas.",
+    "mfaTitle": "Authentification à deux facteurs (2FA)",
+    "mfaDescription": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
+    "mfaEnabled": "La 2FA est actuellement activée.",
+    "mfaDisabled": "La 2FA est actuellement désactivée.",
+    "mfaEnableButton": "Activer la 2FA",
+    "mfaDisableButton": "Désactiver la 2FA",
+    "mfaDisableConfirm": "Êtes-vous sûr de vouloir désactiver la 2FA ? Cela réduira la sécurité de votre compte.",
+    "mfaSetupTitle": "Configurer l'authentification à deux facteurs",
+    "mfaSetupStep1": "1. Scannez ce code QR avec votre application d'authentification (par ex., Google Authenticator, Authy).",
+    "mfaSetupStep2": "Ou entrez cette clé secrète manuellement :",
+    "mfaSetupStep3": "2. Entrez le code à 6 chiffres de votre application pour vérifier.",
+    "mfaVerificationCodeLabel": "Code de vérification",
+    "mfaVerifyButton": "Vérifier & Activer",
+    "mfaSuccessEnabled": "La 2FA a été activée avec succès.",
+    "mfaSuccessDisabled": "La 2FA a été désactivée avec succès.",
+    "mfaError": "Échec de la vérification du code. Veuillez réessayer.",
+    "copySuccess": "Copié dans le presse-papiers !",
+    "copyFail": "Échec de la copie.",
+    "passwordPolicy": {
+      "title": "Le mot de passe doit contenir :",
+      "length": "Au moins 8 caractères",
+      "lowercase": "Une lettre minuscule",
+      "uppercase": "Une lettre majuscule",
+      "number": "Un chiffre",
+      "special": "Un caractère spécial (!@#$%^&*)"
+    },
+    "themeTitle": "Apparence",
+    "themeDescription": "Choisissez l'apparence de l'application.",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Système"
+  },
+  "authFlows": {
+    "emailConfirmedTitle": "E-mail Confirmé !",
+    "emailConfirmedMessage": "Votre compte a été vérifié avec succès. Vous pouvez maintenant vous connecter et commencer à gérer votre collection.",
+    "goToAppButton": "Accéder à l'application",
+    "passwordResetTitle": "Réinitialisez votre mot de passe",
+    "passwordResetDescription": "Saisissez un nouveau mot de passe sécurisé pour votre compte.",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+    "resetPasswordButton": "Définir le nouveau mot de passe",
+    "passwordResetSuccess": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "backToLoginButton": "Retour à la connexion",
+    "passwordMismatch": "Les nouveaux mots de passe ne correspondent pas."
   }
 }

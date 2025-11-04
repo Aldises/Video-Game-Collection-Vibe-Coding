@@ -16,10 +16,10 @@ const PieChart: React.FC<{title: string, data: [string, number][], formatter: (v
 
     if (total === 0) {
         return (
-            <div className="bg-neutral-dark/50 border border-neutral-light/10 rounded-xl p-6 h-full flex flex-col">
-                <h3 className="text-lg font-bold text-neutral-light mb-4">{title}</h3>
+            <div className="bg-white/50 dark:bg-neutral-dark/50 border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl p-6 h-full flex flex-col">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-light mb-4">{title}</h3>
                 <div className="flex-grow flex items-center justify-center">
-                    <p className="text-neutral-400">{noDataText}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400">{noDataText}</p>
                 </div>
             </div>
         );
@@ -40,8 +40,8 @@ const PieChart: React.FC<{title: string, data: [string, number][], formatter: (v
     const otherItemsValue = data.slice(7).reduce((acc, [, value]) => acc + value, 0);
 
     return (
-        <div className="bg-neutral-dark/50 border border-neutral-light/10 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-neutral-light mb-4">{title}</h3>
+        <div className="bg-white/50 dark:bg-neutral-dark/50 border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-light mb-4">{title}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="relative w-40 h-40 lg:w-48 lg:h-48 mx-auto">
                     <div 
@@ -49,7 +49,7 @@ const PieChart: React.FC<{title: string, data: [string, number][], formatter: (v
                         style={{ background: conicGradient }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 lg:w-24 lg:h-24 bg-neutral-dark/80 backdrop-blur-sm rounded-full border border-neutral-light/10"></div>
+                        <div className="w-20 h-20 lg:w-24 lg:h-24 bg-white/80 dark:bg-neutral-dark/80 backdrop-blur-sm rounded-full border border-neutral-900/10 dark:border-neutral-light/10"></div>
                     </div>
                 </div>
                 <ul className="space-y-2 text-sm">
@@ -59,9 +59,9 @@ const PieChart: React.FC<{title: string, data: [string, number][], formatter: (v
                             <li key={label} className="flex items-center justify-between gap-2">
                                 <div className="flex items-center overflow-hidden">
                                     <span className="w-3 h-3 rounded-sm mr-2 flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                                    <span className="font-medium text-neutral-300 truncate" title={label}>{label}</span>
+                                    <span className="font-medium text-neutral-700 dark:text-neutral-300 truncate" title={label}>{label}</span>
                                 </div>
-                                <span className="font-semibold text-neutral-light text-right flex-shrink-0">{formatter(value)} ({percentage.toFixed(0)}%)</span>
+                                <span className="font-semibold text-neutral-900 dark:text-neutral-light text-right flex-shrink-0">{formatter(value)} ({percentage.toFixed(0)}%)</span>
                             </li>
                         )
                     })}
@@ -69,9 +69,9 @@ const PieChart: React.FC<{title: string, data: [string, number][], formatter: (v
                          <li className="flex items-center justify-between gap-2">
                             <div className="flex items-center">
                                 <span className="w-3 h-3 rounded-sm mr-2 flex-shrink-0 bg-neutral-500"></span>
-                                <span className="font-medium text-neutral-300">Other</span>
+                                <span className="font-medium text-neutral-700 dark:text-neutral-300">Other</span>
                             </div>
-                            <span className="font-semibold text-neutral-light text-right flex-shrink-0">{formatter(otherItemsValue)} ({(otherItemsValue/total * 100).toFixed(0)}%)</span>
+                            <span className="font-semibold text-neutral-900 dark:text-neutral-light text-right flex-shrink-0">{formatter(otherItemsValue)} ({(otherItemsValue/total * 100).toFixed(0)}%)</span>
                         </li>
                     )}
                 </ul>
@@ -141,25 +141,25 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ collection }) => {
   if (collection.length === 0) {
     return (
       <div className="w-full text-center py-16 animate-fade-in">
-        <h2 className="text-3xl font-bold text-neutral-light mb-4">{t('analytics.emptyTitle')}</h2>
-        <p className="text-neutral-400">{t('analytics.emptyDesc')}</p>
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light mb-4">{t('analytics.emptyTitle')}</h2>
+        <p className="text-neutral-500 dark:text-neutral-400">{t('analytics.emptyDesc')}</p>
       </div>
     );
   }
   
   const StatCard: React.FC<{title: string, value: string, subvalue?: string}> = ({title, value, subvalue}) => (
-      <div className="bg-neutral-dark/50 border border-neutral-light/10 rounded-xl p-6">
-          <h3 className="text-sm font-medium text-neutral-400 mb-2">{title}</h3>
-          <p className="text-3xl font-bold text-neutral-light">{value}</p>
-          {subvalue && <p className="text-sm text-neutral-300">{subvalue}</p>}
+      <div className="bg-white/50 dark:bg-neutral-dark/50 border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl p-6">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">{title}</h3>
+          <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{value}</p>
+          {subvalue && <p className="text-sm text-neutral-700 dark:text-neutral-300">{subvalue}</p>}
       </div>
   );
 
   return (
     <div className="w-full max-w-7xl animate-fade-in space-y-8">
         <div>
-            <h2 className="text-3xl font-bold text-neutral-light">{t('analytics.title')}</h2>
-            <p className="text-neutral-400 mt-1">{t('analytics.description')}</p>
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('analytics.title')}</h2>
+            <p className="text-neutral-500 dark:text-neutral-400 mt-1">{t('analytics.description')}</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

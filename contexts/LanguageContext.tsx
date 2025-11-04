@@ -18,11 +18,11 @@ export const LanguageContext = createContext<LanguageContextType>({
 
 const loadTranslations = async (language: Language): Promise<Record<string, any>> => {
   try {
-    const response = await fetch(`/locales/${language}.json`);
+    const response = await fetch(`./locales/${language}.json`);
     if (!response.ok) {
         // Fallback to English if a language file is not found
         console.error(`Could not load ${language}.json, falling back to English.`);
-        const fallbackResponse = await fetch(`/locales/en.json`);
+        const fallbackResponse = await fetch(`./locales/en.json`);
         return await fallbackResponse.json();
     }
     return await response.json();

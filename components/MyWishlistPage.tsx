@@ -5,6 +5,7 @@ import { useUser } from '../hooks/useUser';
 import { SortIcon } from './icons/SortIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../hooks/useLocalization';
+import Modal from './Modal';
 
 interface MyWishlistPageProps {
   wishlist: GameItem[];
@@ -21,6 +22,7 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   const [sortKey, setSortKey] = useState<SortKey>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filters, setFilters] = useState({ title: '', platform: '', publisher: '', itemType: '', condition: '' });
+  const [itemToRemove, setItemToRemove] = useState<number | null>(null);
 
   const uniquePlatforms = useMemo(() => {
     const platforms = new Set(wishlist.map(item => item.platform));
@@ -36,10 +38,11 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
     setFilters({ title: '', platform: '', publisher: '', itemType: '', condition: '' });
   };
 
-  const handleRemove = async (itemId: number) => {
-    if (user && window.confirm(t('wishlist.confirmRemove'))) {
-      await removeFromWishlist(user.id, itemId);
+  const handleRemove = async () => {
+    if (user && itemToRemove !== null) {
+      await removeFromWishlist(user.id, itemToRemove);
       onDataChange();
+      setItemToRemove(null);
     }
   };
   
@@ -74,7 +77,7 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   };
 
   const SortableHeader: React.FC<{ headerKey: SortKey, label: string }> = ({ headerKey, label }) => (
-    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
         <button onClick={() => handleSort(headerKey)} className="flex items-center gap-1 group">
             {label}
             {sortKey === headerKey && <SortIcon className={`h-4 w-4 transition-transform ${sortDirection === 'asc' ? 'rotate-180' : ''}`} />}
@@ -83,26 +86,37 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
   );
 
   return (
-    <div className="w-full max-w-7xl animate-fade-in bg-neutral-dark/50 backdrop-blur-sm border border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
+    <>
+    <Modal
+        isOpen={itemToRemove !== null}
+        onClose={() => setItemToRemove(null)}
+        onConfirm={handleRemove}
+        title={t('wishlist.confirmRemoveTitle')}
+        confirmText={t('common.delete')}
+        confirmVariant="danger"
+    >
+        {t('wishlist.confirmRemoveMessage')}
+    </Modal>
+    <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-neutral-light">{t('wishlist.title', { count: filteredAndSortedWishlist.length })}</h2>
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('wishlist.title', { count: filteredAndSortedWishlist.length })}</h2>
       </div>
       
-      <div className="mb-6 p-4 bg-neutral-dark/30 rounded-lg border border-neutral-light/10">
+      <div className="mb-6 p-4 bg-gray-200/30 dark:bg-neutral-dark/30 rounded-lg border border-neutral-900/10 dark:border-neutral-light/10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-              <input type="text" name="title" placeholder={t('collection.filterTitle')} value={filters.title} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-              <select name="platform" value={filters.platform} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
+              <input type="text" name="title" placeholder={t('collection.filterTitle')} value={filters.title} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <select name="platform" value={filters.platform} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
                   <option value="">{t('collection.filterPlatform')}</option>
                   {uniquePlatforms.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <input type="text" name="publisher" placeholder={t('collection.filterPublisher')} value={filters.publisher} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-              <select name="itemType" value={filters.itemType} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
+              <input type="text" name="publisher" placeholder={t('collection.filterPublisher')} value={filters.publisher} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+              <select name="itemType" value={filters.itemType} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
                   <option value="">{t('wishlist.filterItemType')}</option>
                   <option value="Game">Game</option>
                   <option value="Console">Console</option>
                   <option value="Accessory">Accessory</option>
               </select>
-              <select name="condition" value={filters.condition} onChange={handleFilterChange} className="bg-neutral-darker border border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
+              <select name="condition" value={filters.condition} onChange={handleFilterChange} className="bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary">
                   <option value="">{t('wishlist.filterCondition')}</option>
                   <option value="Boxed">{t('conditions.boxed')}</option>
                   <option value="Loose">{t('conditions.loose')}</option>
@@ -115,30 +129,30 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
       <div className="overflow-x-auto">
         <table className="min-w-full">
             <thead>
-                <tr className="border-b border-neutral-light/10">
+                <tr className="border-b border-neutral-900/10 dark:border-neutral-light/10">
                     <SortableHeader headerKey="title" label={t('tableHeaders.title')} />
                     <SortableHeader headerKey="platform" label={t('tableHeaders.platform')} />
                     <SortableHeader headerKey="publisher" label={t('tableHeaders.publisher')} />
                     <SortableHeader headerKey="releaseYear" label={t('tableHeaders.year')} />
                     <SortableHeader headerKey="itemType" label={t('tableHeaders.itemType')} />
                     <SortableHeader headerKey="condition" label={t('tableHeaders.condition')} />
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
+                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
             </thead>
             <tbody>
                 {filteredAndSortedWishlist.map(item => (
-                    <tr key={item.id} className="transition-colors border-b border-neutral-light/10 hover:bg-white/5">
+                    <tr key={item.id} className="transition-colors border-b border-neutral-900/10 dark:border-neutral-light/10 hover:bg-black/5 dark:hover:bg-white/5">
                         <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-neutral-light">{item.title}</div>
+                            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-light">{item.title}</div>
                         </td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.platform}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.publisher}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.releaseYear}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{item.itemType}</td>
-                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.platform}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.publisher}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.releaseYear}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{item.itemType}</td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700 dark:text-neutral-300">{t(`conditions.${item.condition?.toLowerCase()}`)}</td>
                         <td className="px-5 py-4 whitespace-nowrap">
                             <button
-                                onClick={() => handleRemove(item.id!)}
+                                onClick={() => setItemToRemove(item.id!)}
                                 className="text-red-500 hover:text-red-400"
                                 title={t('common.remove')}
                             >
@@ -152,15 +166,16 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
       </div>
       {wishlist.length > 0 && filteredAndSortedWishlist.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">{t('wishlist.noMatch')}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('wishlist.noMatch')}</p>
          </div>
       )}
       {wishlist.length === 0 && (
          <div className="text-center py-16">
-            <p className="text-neutral-400">{t('wishlist.empty')}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('wishlist.empty')}</p>
          </div>
        )}
     </div>
+    </>
   );
 };
 
