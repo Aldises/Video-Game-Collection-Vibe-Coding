@@ -118,15 +118,18 @@
     "importLoader": "Importation de votre collection, veuillez patienter...",
     "backToCollection": "Retour à la collection",
     "editingLocked": "Les données de prix ne sont pas modifiables.",
-    "confirmDuplicatesTitle": "Supprimer les doublons",
-    "confirmDuplicatesMessage": "Cette action analysera votre collection à la recherche d'articles avec le même titre et la même plateforme, conservera l'entrée la plus ancienne et supprimera toutes les copies plus récentes. Êtes-vous sûr ?",
-    "confirmDuplicatesAction": "Trouver & Supprimer",
     "duplicatesRemoved": "{count} articles en double ont été supprimés.",
     "noDuplicatesFound": "Aucun doublon n'a été trouvé dans votre collection.",
     "duplicatesError": "Une erreur est survenue lors de la suppression des doublons.",
     "updatePricesLoader": "Mise à jour des prix... ({progress}% terminé)",
     "updatePricesSuccess": "Tous les prix ont été mis à jour avec succès.",
-    "updatePricesError": "Une erreur est survenue lors de la mise à jour des prix."
+    "updatePricesError": "Une erreur est survenue lors de la mise à jour des prix.",
+    "duplicatesModal": {
+      "title": "Gérer les doublons",
+      "confirmAction": "Supprimer la sélection ({count})",
+      "keep": "Conserver",
+      "selectAll": "Tout sélectionner pour suppression"
+    }
   },
   "wishlist": {
     "title": "Ma Liste de Souhaits ({count})",

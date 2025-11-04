@@ -118,15 +118,18 @@
     "importLoader": "Ihre Sammlung wird importiert, bitte warten...",
     "backToCollection": "Zurück zur Sammlung",
     "editingLocked": "Preisdaten sind nicht editierbar.",
-    "confirmDuplicatesTitle": "Doppelte Artikel entfernen",
-    "confirmDuplicatesMessage": "Dies durchsucht Ihre Sammlung nach Artikeln mit demselben Titel und derselben Plattform, behält den ältesten Eintrag und entfernt alle neueren Kopien. Sind Sie sicher?",
-    "confirmDuplicatesAction": "Suchen & Entfernen",
     "duplicatesRemoved": "{count} doppelte Artikel wurden entfernt.",
     "noDuplicatesFound": "In Ihrer Sammlung wurden keine Duplikate gefunden.",
     "duplicatesError": "Beim Entfernen von Duplikaten ist ein Fehler aufgetreten.",
     "updatePricesLoader": "Preise werden aktualisiert... ({progress}% abgeschlossen)",
     "updatePricesSuccess": "Alle Preise wurden erfolgreich aktualisiert.",
-    "updatePricesError": "Beim Aktualisieren der Preise ist ein Fehler aufgetreten."
+    "updatePricesError": "Beim Aktualisieren der Preise ist ein Fehler aufgetreten.",
+    "duplicatesModal": {
+      "title": "Doppelte Artikel verwalten",
+      "confirmAction": "Ausgewählte entfernen ({count})",
+      "keep": "Behalten",
+      "selectAll": "Alle zum Entfernen auswählen"
+    }
   },
   "wishlist": {
     "title": "Meine Wunschliste ({count})",

@@ -221,56 +221,20 @@ export const updateCollectionItem = async (userId: string, updatedItem: GameItem
     }
 };
 
-export const removeDuplicatesFromCollection = async (userId: string): Promise<number> => {
-  const { data: items, error } = await supabase
-    .from('collection_items')
-    .select('id, title, platform')
-    .eq('user_id', userId);
+export const removeItemsFromCollection = async (userId: string, itemIds: number[]): Promise<void> => {
+    if (itemIds.length === 0) return;
+    const { error } = await supabase
+        .from('collection_items')
+        .delete()
+        .eq('user_id', userId)
+        .in('id', itemIds);
 
-  if (error) {
-    console.error("Error fetching collection for duplicate check:", error);
-    throw new Error(error.message);
-  }
-  if (!items || items.length === 0) {
-    return 0;
-  }
-
-  const itemsMap = new Map<string, { id: number }[]>();
-  items.forEach(item => {
-    const key = `${item.title.toLowerCase().trim()}-${item.platform.toLowerCase().trim()}`;
-    if (!itemsMap.has(key)) {
-      itemsMap.set(key, []);
+    if (error) {
+        console.error("Error removing items from collection:", error);
+        throw new Error(error.message);
     }
-    itemsMap.get(key)!.push(item);
-  });
-
-  const duplicateIds: number[] = [];
-  itemsMap.forEach(group => {
-    if (group.length > 1) {
-      // Sort by ID to find the original (oldest)
-      group.sort((a, b) => a.id - b.id);
-      // Mark all but the first one for deletion
-      const idsToDelete = group.slice(1).map(item => item.id);
-      duplicateIds.push(...idsToDelete);
-    }
-  });
-
-  if (duplicateIds.length === 0) {
-    return 0;
-  }
-
-  const { error: deleteError } = await supabase
-    .from('collection_items')
-    .delete()
-    .in('id', duplicateIds);
-
-  if (deleteError) {
-    console.error("Error deleting duplicates:", deleteError);
-    throw new Error(deleteError.message);
-  }
-
-  return duplicateIds.length;
 };
+
 
 export const updateAllCollectionPrices = async (userId: string, onProgress: (progress: number) => void): Promise<void> => {
     const { data: items, error } = await supabase

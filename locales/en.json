@@ -118,15 +118,18 @@
     "importLoader": "Importing your collection, please wait...",
     "backToCollection": "Back to Collection",
     "editingLocked": "Pricing data is not editable.",
-    "confirmDuplicatesTitle": "Remove Duplicate Items",
-    "confirmDuplicatesMessage": "This will scan your collection for items with the same title and platform, keeping the oldest entry and removing all newer copies. Are you sure?",
-    "confirmDuplicatesAction": "Find & Remove",
     "duplicatesRemoved": "{count} duplicate items were removed.",
     "noDuplicatesFound": "No duplicates were found in your collection.",
     "duplicatesError": "An error occurred while removing duplicates.",
     "updatePricesLoader": "Updating prices... ({progress}% complete)",
     "updatePricesSuccess": "All prices have been successfully updated.",
-    "updatePricesError": "An error occurred while updating prices."
+    "updatePricesError": "An error occurred while updating prices.",
+    "duplicatesModal": {
+      "title": "Manage Duplicate Items",
+      "confirmAction": "Remove Selected ({count})",
+      "keep": "Keep",
+      "selectAll": "Select all for removal"
+    }
   },
   "wishlist": {
     "title": "My Wishlist ({count})",

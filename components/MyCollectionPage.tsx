@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { GameItem, PriceEstimate } from '../types';
-import { removeFromCollection, addToCollection, updateCollectionItem, removeDuplicatesFromCollection, updateAllCollectionPrices } from '../services/dbService';
+import { removeFromCollection, addToCollection, updateCollectionItem, removeItemsFromCollection, updateAllCollectionPrices } from '../services/dbService';
 import { useUser } from '../hooks/useUser';
 import { exportCollectionToCsv, parseCollectionFromCsv } from '../utils/csvUtils';
 import { ExportIcon } from './icons/ExportIcon';
@@ -24,6 +24,11 @@ interface MyCollectionPageProps {
   onDataChange: () => void;
 }
 
+interface DuplicateGroup {
+    key: string;
+    items: GameItem[];
+}
+
 type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition' | 'priceEbayUsd' | 'priceRicardoChf' | 'priceAnibisChf' | 'priceEbayEur';
 type SortDirection = 'asc' | 'desc';
 
@@ -43,7 +48,9 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
   const [editedItemData, setEditedItemData] = useState<GameItem | null>(null);
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
-  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isFindingDuplicates, setIsFindingDuplicates] = useState(false);
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
+  const [selectedForRemoval, setSelectedForRemoval] = useState<Set<number>>(new Set());
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [updateProgress, setUpdateProgress] = useState(0);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -229,25 +236,77 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     exportCollectionToCsv(collection, translations);
   }
   
+  const handleFindDuplicatesClick = () => {
+    setIsFindingDuplicates(true);
+    const itemsMap = new Map<string, GameItem[]>();
+    collection.forEach(item => {
+        const key = `${item.title.toLowerCase().trim()}-${item.platform.toLowerCase().trim()}`;
+        if (!itemsMap.has(key)) {
+            itemsMap.set(key, []);
+        }
+        itemsMap.get(key)!.push(item);
+    });
+
+    const foundDuplicates: DuplicateGroup[] = [];
+    itemsMap.forEach((group, key) => {
+        if (group.length > 1) {
+            group.sort((a, b) => a.id! - b.id!);
+            foundDuplicates.push({ key, items: group });
+        }
+    });
+    
+    setDuplicateGroups(foundDuplicates);
+    setSelectedForRemoval(new Set());
+    setIsFindingDuplicates(false);
+    setIsDuplicateModalOpen(true);
+  };
+
   const handleConfirmRemoveDuplicates = async () => {
-    if (!user) return;
-    setIsCheckingDuplicates(true);
+    if (!user || selectedForRemoval.size === 0) {
+        setIsDuplicateModalOpen(false);
+        return;
+    };
+    setIsFindingDuplicates(true);
     setIsDuplicateModalOpen(false);
     try {
-        const removedCount = await removeDuplicatesFromCollection(user.id);
-        if (removedCount > 0) {
-            setNotification({ message: t('collection.duplicatesRemoved', { count: removedCount }), type: 'success' });
-        } else {
-            setNotification({ message: t('collection.noDuplicatesFound'), type: 'success' });
-        }
+        const idsToRemove = Array.from(selectedForRemoval);
+        await removeItemsFromCollection(user.id, idsToRemove);
+        setNotification({ message: t('collection.duplicatesRemoved', { count: idsToRemove.length }), type: 'success' });
         onDataChange();
     } catch (error) {
         console.error("Error removing duplicates:", error);
         setNotification({ message: t('collection.duplicatesError'), type: 'error' });
     } finally {
-        setIsCheckingDuplicates(false);
+        setIsFindingDuplicates(false);
+        setDuplicateGroups([]);
+        setSelectedForRemoval(new Set());
     }
-  }
+  };
+
+  const handleDuplicateSelection = (itemId: number) => {
+    setSelectedForRemoval(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(itemId)) {
+            newSet.delete(itemId);
+        } else {
+            newSet.add(itemId);
+        }
+        return newSet;
+    });
+  };
+
+  // FIX: Explicitly set the type for `useMemo` to `number[]` to fix downstream type inference errors.
+  const allRemovableIds = useMemo<number[]>(() => {
+    return duplicateGroups.flatMap(g => g.items.slice(1).map(i => i.id!));
+  }, [duplicateGroups]);
+
+  const handleSelectAllRemovable = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+        setSelectedForRemoval(new Set(allRemovableIds));
+    } else {
+        setSelectedForRemoval(new Set());
+    }
+  };
 
   const handleUpdatePrices = async () => {
     if (!user) return;
@@ -300,7 +359,7 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
             setError(errorMessage);
             setIsLoading(false);
         }
-    }, []);
+    }, [handleCsvImport, t]);
 
     const handleDrag = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
     const handleDragIn = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.items && e.dataTransfer.items.length > 0) setIsDragging(true); }, []);
@@ -378,11 +437,60 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
         isOpen={isDuplicateModalOpen}
         onClose={() => setIsDuplicateModalOpen(false)}
         onConfirm={handleConfirmRemoveDuplicates}
-        title={t('collection.confirmDuplicatesTitle')}
-        confirmText={isCheckingDuplicates ? t('common.processing') : t('collection.confirmDuplicatesAction')}
+        title={t('collection.duplicatesModal.title')}
+        confirmText={t('collection.duplicatesModal.confirmAction', { count: selectedForRemoval.size })}
         confirmVariant="danger"
     >
-        {t('collection.confirmDuplicatesMessage')}
+        {duplicateGroups.length > 0 ? (
+        <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+            <div className="flex items-center justify-between p-2 rounded-md bg-gray-100 dark:bg-neutral-dark">
+                <label htmlFor="select-all-duplicates" className="flex items-center gap-2 text-sm font-medium">
+                    <input
+                        id="select-all-duplicates"
+                        type="checkbox"
+                        className="rounded"
+                        checked={selectedForRemoval.size === allRemovableIds.length && allRemovableIds.length > 0}
+                        onChange={handleSelectAllRemovable}
+                        ref={el => el && (el.indeterminate = selectedForRemoval.size > 0 && selectedForRemoval.size < allRemovableIds.length)}
+                    />
+                    {t('collection.duplicatesModal.selectAll')}
+                </label>
+            </div>
+            {duplicateGroups.map(group => (
+                <div key={group.key} className="p-3 border border-neutral-900/10 dark:border-neutral-light/10 rounded-lg">
+                    <h4 className="font-bold text-neutral-900 dark:text-neutral-light capitalize">{group.key.replace(/-/g, ' - ')}</h4>
+                    <ul className="mt-2 space-y-1">
+                        {group.items.map((item, index) => (
+                            <li key={item.id} className={`flex items-center justify-between p-2 rounded text-sm ${index === 0 ? 'bg-green-50 dark:bg-green-900/30' : 'hover:bg-gray-100 dark:hover:bg-neutral-dark'}`}>
+                                <div className="flex items-center gap-3">
+                                    {index > 0 ? (
+                                        <input
+                                            type="checkbox"
+                                            className="rounded"
+                                            checked={selectedForRemoval.has(item.id!)}
+                                            onChange={() => handleDuplicateSelection(item.id!)}
+                                        />
+                                    ) : (
+                                        <div className="w-5 h-5 flex-shrink-0" /> // Placeholder for alignment
+                                    )}
+                                    <span>
+                                        ID: {item.id}, {item.condition}, {item.releaseYear}, {item.publisher}
+                                    </span>
+                                </div>
+                                {index === 0 && (
+                                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                        {t('collection.duplicatesModal.keep')}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    ) : (
+        <p>{t('collection.noDuplicatesFound')}</p>
+    )}
     </Modal>
     <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -390,19 +498,19 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
         <div className="flex items-center gap-4 flex-wrap justify-center">
             <button
                 onClick={handleUpdatePrices}
-                disabled={isCheckingDuplicates}
+                disabled={isFindingDuplicates}
                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
                 <ArrowPathIcon className="h-5 w-5" />
                 {t('collection.updatePrices')}
             </button>
             <button
-                onClick={() => setIsDuplicateModalOpen(true)}
-                disabled={isCheckingDuplicates}
+                onClick={handleFindDuplicatesClick}
+                disabled={isFindingDuplicates}
                 className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:bg-neutral-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
             >
                 <SparklesIcon className="h-5 w-5" />
-                {t('collection.removeDuplicates')}
+                {isFindingDuplicates ? t('common.processing') : t('collection.removeDuplicates')}
             </button>
             <button
                 onClick={() => setIsImportView(true)}
