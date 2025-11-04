@@ -29,21 +29,26 @@ export const signIn = async ({ email, password }: AuthCredentials): Promise<Sign
     if (error) {
         throw new Error(error.message);
     }
-    if (!data.user) {
-        throw new Error('Sign in failed: no user returned.');
+    if (!data.user || !data.session) {
+        throw new Error('Sign in failed: no user or session returned.');
     }
 
     const user = { id: data.user.id, email: data.user.email ?? null };
-    const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     
-    if (mfaData?.nextLevel === 'aal2') {
+    // If the session's Authenticator Assurance Level is 'aal1', it means a second factor is required.
+    if (data.session.aal === 'aal1') {
+        // We need to get the factor ID to challenge it.
         const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
-        if (factorsError || !factorsData?.totp[0]) {
-             throw new Error(factorsError?.message || 'Could not retrieve MFA factor.');
+        
+        // Check if there's a TOTP factor available to challenge.
+        if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
+             throw new Error(factorsError?.message || '2FA is required, but no TOTP factor could be found.');
         }
+        // Return that MFA is required, along with the first available TOTP factor ID.
         return { user, mfaRequired: true, factorId: factorsData.totp[0].id };
     }
 
+    // If AAL is not 'aal1', the user is fully authenticated (or MFA is not enabled).
     return { user, mfaRequired: false };
 };
 

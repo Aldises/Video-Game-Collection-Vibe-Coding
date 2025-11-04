@@ -2,8 +2,9 @@ import React, { useState, FormEvent } from 'react';
 import { signIn, signUp, sendPasswordResetEmail, verifyMfa } from '../services/authService';
 import { GameControllerIcon } from './icons/GameControllerIcon';
 import { useLocalization } from '../hooks/useLocalization';
+import { EnvelopeIcon } from './icons/EnvelopeIcon';
 
-type Mode = 'login' | 'signup' | 'forgotPassword' | 'mfa';
+type Mode = 'login' | 'signup' | 'forgotPassword' | 'mfa' | 'checkEmail';
 
 const LoginPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('login');
@@ -12,14 +13,13 @@ const LoginPage: React.FC = () => {
   const [mfaCode, setMfaCode] = useState('');
   const [factorId, setFactorId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkEmailMessage, setCheckEmailMessage] = useState<string>('');
   const { t } = useLocalization();
 
   const handleAuthSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMessage(null);
     setIsLoading(true);
 
     try {
@@ -31,7 +31,8 @@ const LoginPage: React.FC = () => {
         }
       } else {
         await signUp({ email, password });
-        // The onAuthStateChange listener will handle navigation.
+        setCheckEmailMessage(t('login.signupSuccess'));
+        setMode('checkEmail');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? t(err.message, { message: err.message }) : t('login.errorUnknown');
@@ -50,11 +51,11 @@ const LoginPage: React.FC = () => {
   const handlePasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMessage(null);
     setIsLoading(true);
     try {
         await sendPasswordResetEmail(email);
-        setSuccessMessage(t('login.recoverySent'));
+        setCheckEmailMessage(t('login.recoverySent'));
+        setMode('checkEmail');
     } catch(err) {
         const errorMessage = err instanceof Error ? t(err.message) : t('login.errorUnknown');
         setError(errorMessage);
@@ -80,6 +81,17 @@ const LoginPage: React.FC = () => {
   };
   
   const renderFormContent = () => {
+    if (mode === 'checkEmail') {
+        return (
+            <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/50 mb-4">
+                    <EnvelopeIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">{checkEmailMessage}</p>
+            </div>
+        );
+    }
+    
     if (mode === 'forgotPassword') {
         return (
              <form onSubmit={handlePasswordReset} className="space-y-6">
@@ -90,7 +102,6 @@ const LoginPage: React.FC = () => {
                     </div>
                 </div>
                 {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-                {successMessage && <p className="text-sm text-green-600 dark:text-green-400">{successMessage}</p>}
                 <div>
                     <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-secondary disabled:opacity-50 disabled:cursor-wait">
                     {isLoading ? t('common.processing') : t('login.sendRecovery')}
@@ -156,6 +167,7 @@ const LoginPage: React.FC = () => {
           case 'signup': return t('login.createAccount');
           case 'forgotPassword': return t('login.resetPassword');
           case 'mfa': return t('login.enterMfa');
+          case 'checkEmail': return t('login.checkEmailTitle');
       }
   }
 
@@ -176,7 +188,7 @@ const LoginPage: React.FC = () => {
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {mode === 'login' && <>{t('login.noAccount')} <button onClick={() => { setMode('signup'); setError(null); }} className="font-medium bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 ml-1">{t('login.signUp')}</button></>}
             {mode === 'signup' && <>{t('login.haveAccount')} <button onClick={() => { setMode('login'); setError(null); }} className="font-medium bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 ml-1">{t('login.signIn')}</button></>}
-            {mode === 'forgotPassword' && <>{t('login.rememberedPassword')} <button onClick={() => { setMode('login'); setError(null); setSuccessMessage(null); }} className="font-medium bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 ml-1">{t('login.backToLogin')}</button></>}
+            {(mode === 'forgotPassword' || mode === 'checkEmail') && <>{t('login.rememberedPassword')} <button onClick={() => { setMode('login'); setError(null); }} className="font-medium bg-gradient-to-r from-glow-start to-glow-end bg-clip-text text-transparent hover:opacity-80 ml-1">{t('login.backToLogin')}</button></>}
           </p>
         </div>
       </div>

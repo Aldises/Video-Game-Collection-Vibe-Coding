@@ -52,7 +52,9 @@
     "enterMfa": "Two-Factor Authentication",
     "mfaCodeLabel": "Authentication Code",
     "verify": "Verify",
-    "errorInvalidMfa": "Invalid authentication code. Please try again."
+    "errorInvalidMfa": "Invalid authentication code. Please try again.",
+    "checkEmailTitle": "Check Your Email",
+    "signupSuccess": "Your account has been created. Please check your email for a confirmation link to activate your account."
   },
   "uploader": {
     "title": "Upload Your Collection",

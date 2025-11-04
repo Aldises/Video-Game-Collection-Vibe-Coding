@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
 import { updatePassword, getMfaStatus, enrollMfa, challengeAndVerifyMfa, unenrollMfa } from '../services/authService';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
@@ -65,17 +65,23 @@ const MyAccountPage: React.FC = () => {
     const [mfaVerificationCode, setMfaVerificationCode] = useState('');
     const [enrollmentFactorId, setEnrollmentFactorId] = useState<string | null>(null);
 
-
-    useEffect(() => {
-        const checkMfaStatus = async () => {
-            setLoading(true);
+    const checkMfaStatus = useCallback(async () => {
+        setLoading(true);
+        try {
             const status = await getMfaStatus();
             setMfaEnabled(status.isEnabled);
             setMfaFactorId(status.factorId);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? t(err.message, { default: 'Failed to fetch MFA status.' }) : 'Failed to fetch MFA status.';
+            setError(errorMessage);
+        } finally {
             setLoading(false);
-        };
+        }
+    }, [t]);
+
+    useEffect(() => {
         checkMfaStatus();
-    }, []);
+    }, [checkMfaStatus]);
 
     const handlePasswordUpdate = async (e: FormEvent) => {
         e.preventDefault();
@@ -95,9 +101,6 @@ const MyAccountPage: React.FC = () => {
 
         setLoading(true);
         try {
-            // NOTE: Supabase's updateUser doesn't require the old password,
-            // as the user is already authenticated. We ask for it as a UX measure.
-            // A backend check could be added for extra security if needed.
             await updatePassword(newPassword);
             setSuccessMessage(t('account.passwordSuccess'));
             setCurrentPassword('');
@@ -121,7 +124,7 @@ const MyAccountPage: React.FC = () => {
             setEnrollmentFactorId(data.id);
             setIsMfaSetup(true);
         } catch (err) {
-            const errorMessage = err instanceof Error ? t(err.message) : t('account.mfaError');
+            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaError') }) : t('account.mfaError');
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -132,14 +135,16 @@ const MyAccountPage: React.FC = () => {
         e.preventDefault();
         if (!enrollmentFactorId) return;
         setError(null);
+        setSuccessMessage(null);
         setLoading(true);
         try {
             await challengeAndVerifyMfa(enrollmentFactorId, mfaVerificationCode);
             setSuccessMessage(t('account.mfaSuccessEnabled'));
             setIsMfaSetup(false);
-            setMfaEnabled(true);
+            setMfaVerificationCode('');
+            await checkMfaStatus();
         } catch(err) {
-            const errorMessage = err instanceof Error ? t(err.message) : t('account.mfaError');
+            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaError') }) : t('account.mfaError');
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -149,13 +154,14 @@ const MyAccountPage: React.FC = () => {
     const handleDisableMfa = async () => {
         if (!mfaFactorId || !window.confirm(t('account.mfaDisableConfirm'))) return;
         setError(null);
+        setSuccessMessage(null);
         setLoading(true);
         try {
             await unenrollMfa(mfaFactorId);
             setSuccessMessage(t('account.mfaSuccessDisabled'));
-            setMfaEnabled(false);
+            await checkMfaStatus();
         } catch (err) {
-            const errorMessage = err instanceof Error ? t(err.message) : t('account.mfaError');
+            const errorMessage = err instanceof Error ? t(err.message, { default: t('account.mfaError') }) : t('account.mfaError');
             setError(errorMessage);
         } finally {
             setLoading(false);

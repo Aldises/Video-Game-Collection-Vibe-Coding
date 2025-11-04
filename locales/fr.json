@@ -52,7 +52,9 @@
     "enterMfa": "Authentification à deux facteurs",
     "mfaCodeLabel": "Code d'authentification",
     "verify": "Vérifier",
-    "errorInvalidMfa": "Code d'authentification invalide. Veuillez réessayer."
+    "errorInvalidMfa": "Code d'authentification invalide. Veuillez réessayer.",
+    "checkEmailTitle": "Vérifiez vos e-mails",
+    "signupSuccess": "Votre compte a été créé. Veuillez vérifier vos e-mails pour un lien de confirmation afin d'activer votre compte."
   },
   "uploader": {
     "title": "Téléchargez Votre Collection",

@@ -52,7 +52,9 @@
     "enterMfa": "Zwei-Faktor-Authentisierung",
     "mfaCodeLabel": "Authentifizierungscode",
     "verify": "Überprüfen",
-    "errorInvalidMfa": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut."
+    "errorInvalidMfa": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut.",
+    "checkEmailTitle": "Überprüfen Sie Ihre E-Mails",
+    "signupSuccess": "Ihr Konto wurde erstellt. Bitte überprüfen Sie Ihre E-Mails auf einen Bestätigungslink, um Ihr Konto zu aktivieren."
   },
   "uploader": {
     "title": "Laden Sie Ihre Sammlung hoch",
