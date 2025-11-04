@@ -32,11 +32,11 @@ const App: React.FC = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<Page>('scanner');
   const [authFlow, setAuthFlow] = useState<'idle' | 'resetPassword' | 'confirmed'>('idle');
+  const [isMfaFlowActive, setIsMfaFlowActive] = useState(false);
 
 
   useEffect(() => {
     // Manually check the URL hash on initial load to handle redirects correctly.
-    // This is more robust against race conditions where the auth event fires before the listener is attached.
     const hash = window.location.hash;
     if (hash.includes('type=recovery')) {
       setAuthFlow('resetPassword');
@@ -46,9 +46,13 @@ const App: React.FC = () => {
       (event, session) => {
         if (event === 'PASSWORD_RECOVERY') {
             setAuthFlow('resetPassword');
-        } else if (event === 'SIGNED_IN' && sessionStorage.getItem('awaiting_confirmation')) {
-            setAuthFlow('confirmed');
-            sessionStorage.removeItem('awaiting_confirmation');
+        } else if (event === 'SIGNED_IN') {
+             if(sessionStorage.getItem('awaiting_confirmation')) {
+                setAuthFlow('confirmed');
+                sessionStorage.removeItem('awaiting_confirmation');
+             } else if (window.location.hash.includes('type=recovery')) {
+                setAuthFlow('resetPassword');
+             }
         }
       }
     );
@@ -191,12 +195,25 @@ const App: React.FC = () => {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-neutral-light dark:bg-neutral-darker"><Loader message="Initializing..." /></div>;
   }
+  
+  // The main logic to prevent the race condition.
+  // We show the LoginPage if the user is not authenticated OR if they are in the middle of an MFA flow.
+  const showLogin = !user || isMfaFlowActive;
 
   return (
     <div className="min-h-screen bg-neutral-light dark:bg-neutral-darker text-neutral-darker dark:text-neutral-light flex flex-col font-sans">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
-        {!user ? <LoginPage /> : renderContent()}
+        {showLogin ? (
+          <LoginPage 
+            isMfaMode={isMfaFlowActive}
+            onMfaRequired={() => setIsMfaFlowActive(true)}
+            onMfaCompleted={() => setIsMfaFlowActive(false)}
+            onMfaCancelled={() => setIsMfaFlowActive(false)}
+          />
+        ) : (
+          renderContent()
+        )}
       </main>
       <Footer />
     </div>

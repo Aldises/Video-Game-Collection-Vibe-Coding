@@ -235,7 +235,8 @@ const MyAccountPage: React.FC = () => {
                                 id="mfa-verification"
                                 type="text"
                                 inputMode="numeric"
-                                pattern="[0-9]*"
+                                pattern="[0-9]{6}"
+                                maxLength={6}
                                 value={mfaVerificationCode}
                                 onChange={(e) => setMfaVerificationCode(e.target.value)}
                                 required
@@ -268,9 +269,16 @@ const MyAccountPage: React.FC = () => {
                 id="mfa-password-confirm"
                 type="text"
                 inputMode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]{6}"
+                maxLength={6}
                 value={mfaCodeForPassword}
                 onChange={(e) => setMfaCodeForPassword(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleConfirmPasswordUpdate();
+                    }
+                }}
                 required
                 className={defaultInputClass}
                 placeholder="123456"
@@ -290,9 +298,16 @@ const MyAccountPage: React.FC = () => {
                 id="mfa-disable-confirm"
                 type="text"
                 inputMode="numeric"
-                pattern="[0-9]*"
+                pattern="[0-9]{6}"
+                maxLength={6}
                 value={mfaCodeForDisable}
                 onChange={(e) => setMfaCodeForDisable(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleDisableMfa();
+                    }
+                }}
                 required
                 className={defaultInputClass}
                 placeholder="123456"

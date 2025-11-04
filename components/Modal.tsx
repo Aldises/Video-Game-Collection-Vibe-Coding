@@ -37,7 +37,11 @@ const Modal: React.FC<ModalProps> = ({
     };
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      modalRef.current?.focus();
+      // Only set focus if the modal or an element inside it doesn't already have focus.
+      // This prevents stealing focus from an input field when the parent component re-renders.
+      if (!modalRef.current?.contains(document.activeElement)) {
+        modalRef.current?.focus();
+      }
     }
     return () => {
       document.removeEventListener('keydown', handleKeyDown);

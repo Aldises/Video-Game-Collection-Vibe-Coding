@@ -51,6 +51,7 @@
     "backToLogin": "Back to login",
     "enterMfa": "Two-Factor Authentication",
     "mfaCodeLabel": "Authentication Code",
+    "mfaPrompt": "Please enter the code from your authenticator app to complete your sign-in.",
     "verify": "Verify",
     "errorInvalidMfa": "Invalid authentication code. Please try again.",
     "checkEmailTitle": "Check Your Email",

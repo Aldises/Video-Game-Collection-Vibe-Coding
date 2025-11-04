@@ -51,6 +51,7 @@
     "backToLogin": "Zurück zum Login",
     "enterMfa": "Zwei-Faktor-Authentisierung",
     "mfaCodeLabel": "Authentifizierungscode",
+    "mfaPrompt": "Bitte geben Sie den Code aus Ihrer Authenticator-App ein, um die Anmeldung abzuschließen.",
     "verify": "Überprüfen",
     "errorInvalidMfa": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut.",
     "checkEmailTitle": "Überprüfen Sie Ihre E-Mails",

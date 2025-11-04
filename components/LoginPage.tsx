@@ -1,12 +1,25 @@
 import React, { useState, FormEvent } from 'react';
-import { signIn, signUp, sendPasswordResetEmail, verifyMfa } from '../services/authService';
+import { signIn, signUp, sendPasswordResetEmail, verifyMfa, signOut } from '../services/authService';
 import { GameControllerIcon } from './icons/GameControllerIcon';
 import { useLocalization } from '../hooks/useLocalization';
 import { EnvelopeIcon } from './icons/EnvelopeIcon';
+import Modal from './Modal';
 
-type Mode = 'login' | 'signup' | 'forgotPassword' | 'mfa' | 'checkEmail';
+type Mode = 'login' | 'signup' | 'forgotPassword' | 'checkEmail';
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+    isMfaMode?: boolean;
+    onMfaRequired?: () => void;
+    onMfaCompleted?: () => void;
+    onMfaCancelled?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({
+    isMfaMode = false,
+    onMfaRequired,
+    onMfaCompleted,
+    onMfaCancelled,
+}) => {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,8 +40,9 @@ const LoginPage: React.FC = () => {
         const { mfaRequired, factorId } = await signIn({ email, password });
         if (mfaRequired && factorId) {
             setFactorId(factorId);
-            setMode('mfa');
+            onMfaRequired?.();
         }
+        // If MFA is not required, onAuthStateChange in UserContext will handle the login.
       } else {
         await signUp({ email, password });
         setCheckEmailMessage(t('login.signupSuccess'));
@@ -64,14 +78,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleMfaSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleMfaSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     if (!factorId) return;
     setError(null);
     setIsLoading(true);
     try {
         await verifyMfa(factorId, mfaCode);
-        // onAuthStateChange will handle the rest
+        onMfaCompleted?.();
+        // onAuthStateChange will now handle setting the user and navigating to the app
     } catch (err) {
         const errorMessage = err instanceof Error ? t(err.message) : t('login.errorInvalidMfa');
         setError(errorMessage);
@@ -80,6 +95,13 @@ const LoginPage: React.FC = () => {
     }
   };
   
+  const handleMfaCancel = async () => {
+      setError(null);
+      setMfaCode('');
+      await signOut(); // Clean up partial session
+      onMfaCancelled?.();
+  }
+
   const renderFormContent = () => {
     if (mode === 'checkEmail') {
         return (
@@ -105,25 +127,6 @@ const LoginPage: React.FC = () => {
                 <div>
                     <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-secondary disabled:opacity-50 disabled:cursor-wait">
                     {isLoading ? t('common.processing') : t('login.sendRecovery')}
-                    </button>
-                </div>
-            </form>
-        );
-    }
-
-    if (mode === 'mfa') {
-        return (
-            <form onSubmit={handleMfaSubmit} className="space-y-6">
-                <div>
-                    <label htmlFor="mfaCode" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('login.mfaCodeLabel')}</label>
-                    <div className="mt-1">
-                        <input id="mfaCode" name="mfaCode" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" required value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} className="appearance-none block w-full px-3 py-2 border border-neutral-900/20 dark:border-neutral-light/20 rounded-md shadow-sm placeholder-neutral-500 dark:placeholder-neutral-500 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-white dark:bg-neutral-darker text-black dark:text-white" />
-                    </div>
-                </div>
-                {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-                <div>
-                    <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-secondary disabled:opacity-50 disabled:cursor-wait">
-                        {isLoading ? t('common.processing') : t('login.verify')}
                     </button>
                 </div>
             </form>
@@ -166,12 +169,47 @@ const LoginPage: React.FC = () => {
           case 'login': return t('login.welcome');
           case 'signup': return t('login.createAccount');
           case 'forgotPassword': return t('login.resetPassword');
-          case 'mfa': return t('login.enterMfa');
           case 'checkEmail': return t('login.checkEmailTitle');
       }
   }
 
   return (
+    <>
+    <Modal
+        isOpen={isMfaMode}
+        onClose={handleMfaCancel}
+        onConfirm={handleMfaSubmit}
+        title={t('login.enterMfa')}
+        confirmText={isLoading ? t('common.processing') : t('login.verify')}
+    >
+        <div className="space-y-4">
+            <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                {t('login.mfaPrompt')}
+            </p>
+            <input
+                id="mfaCode"
+                name="mfaCode"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                autoComplete="one-time-code"
+                required
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleMfaSubmit();
+                    }
+                }}
+                className="appearance-none block w-full px-3 py-2 border border-neutral-900/20 dark:border-neutral-light/20 rounded-md shadow-sm placeholder-neutral-500 focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm bg-white dark:bg-neutral-darker text-black dark:text-white"
+                placeholder="123456"
+            />
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        </div>
+    </Modal>
+
     <div className="w-full max-w-md animate-fade-in">
       <div className="flex flex-col items-center mb-8">
           <div className="p-3 bg-gradient-to-br from-glow-start to-glow-end rounded-xl mb-4">
@@ -193,6 +231,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

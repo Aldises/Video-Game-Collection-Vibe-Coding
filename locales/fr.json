@@ -51,6 +51,7 @@
     "backToLogin": "Retour à la connexion",
     "enterMfa": "Authentification à deux facteurs",
     "mfaCodeLabel": "Code d'authentification",
+    "mfaPrompt": "Veuillez entrer le code de votre application d'authentification pour finaliser votre connexion.",
     "verify": "Vérifier",
     "errorInvalidMfa": "Code d'authentification invalide. Veuillez réessayer.",
     "checkEmailTitle": "Vérifiez vos e-mails",
