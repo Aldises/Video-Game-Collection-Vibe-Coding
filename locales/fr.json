@@ -21,8 +21,7 @@
     "collection": "Ma Collection",
     "wishlist": "Ma Liste de Souhaits",
     "analytics": "Analyses",
-    "account": "Mon Compte",
-    "subscription": "Abonnement"
+    "account": "Mon Compte"
   },
   "header": {
     "title": "Scanner de Jeux IA",
@@ -174,6 +173,9 @@
     "errorUpload": "Veuillez télécharger un fichier .csv valide.",
     "alertEmptyCollection": "Votre collection est vide."
   },
+   "db": {
+    "fetchError": "Échec de la récupération des données de la base de données. Veuillez vérifier votre connexion et réessayer."
+  },
   "conditions": {
     "boxed": "En boîte",
     "loose": "En vrac",
@@ -230,7 +232,10 @@
     "themeDescription": "Choisissez l'apparence de l'application.",
     "themeLight": "Clair",
     "themeDark": "Sombre",
-    "themeSystem": "Système"
+    "themeSystem": "Système",
+    "plansTitle": "Choisissez votre plan",
+    "plansDescription": "Débloquez plus de fonctionnalités et supprimez les limites en changeant de plan.",
+    "cancelUpgrade": "Annuler"
   },
   "authFlows": {
     "emailConfirmedTitle": "E-mail Confirmé !",
@@ -279,8 +284,6 @@
     "contactError": "Une erreur est survenue. Veuillez réessayer plus tard."
   },
   "subscription": {
-    "title": "Choisissez votre plan",
-    "description": "Débloquez plus de fonctionnalités et supprimez les limites en changeant de plan.",
     "choosePlan": "Choisir ce plan",
     "currentPlan": "Plan actuel"
   },

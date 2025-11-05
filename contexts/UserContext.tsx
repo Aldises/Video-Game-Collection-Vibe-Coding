@@ -6,7 +6,7 @@ import { getUserProfile } from '../services/dbService';
 interface UserContextType {
   user: User | null
   loading: boolean,
-  refetchUser: () => void;
+  refetchUser: (isBackground?: boolean) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -19,8 +19,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const refetchUser = useCallback(async () => {
-    setLoading(true);
+  const refetchUser = useCallback(async (isBackground = false) => {
+    if (!isBackground) {
+        setLoading(true);
+    }
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
@@ -35,9 +37,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // as it might be a temporary network issue.
         // The old user data will persist until a successful fetch or logout.
     } finally {
-        setLoading(false);
+        if (!isBackground) {
+            setLoading(false);
+        }
     }
-  }, []); // Empty dependency array ensures this function is stable.
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {

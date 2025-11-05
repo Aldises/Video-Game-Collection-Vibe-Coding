@@ -21,8 +21,7 @@
     "collection": "My Collection",
     "wishlist": "My Wishlist",
     "analytics": "Analytics",
-    "account": "My Account",
-    "subscription": "Subscription"
+    "account": "My Account"
   },
   "header": {
     "title": "AI Game Scanner",
@@ -174,6 +173,9 @@
     "errorUpload": "Please upload a valid .csv file.",
     "alertEmptyCollection": "Your collection is empty."
   },
+  "db": {
+    "fetchError": "Failed to fetch data from the database. Please check your connection and try again."
+  },
   "conditions": {
     "boxed": "Boxed",
     "loose": "Loose",
@@ -230,7 +232,10 @@
     "themeDescription": "Choose how the application looks.",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeSystem": "System"
+    "themeSystem": "System",
+    "plansTitle": "Choose Your Plan",
+    "plansDescription": "Unlock more features and remove limits by upgrading your plan.",
+    "cancelUpgrade": "Cancel"
   },
   "authFlows": {
     "emailConfirmedTitle": "Email Confirmed!",
@@ -279,8 +284,6 @@
     "contactError": "An error occurred. Please try again later."
   },
   "subscription": {
-    "title": "Choose your plan",
-    "description": "Unlock more features and remove limits by upgrading your plan.",
     "choosePlan": "Choose Plan",
     "currentPlan": "Current Plan"
   },

@@ -6,7 +6,6 @@ import { ScanIcon } from './icons/ScanIcon';
 import { AnalyticsIcon } from './icons/AnalyticsIcon';
 import { LanguageIcon } from './icons/LanguageIcon';
 import { AccountIcon } from './icons/AccountIcon';
-import { CreditCardIcon } from './icons/CreditCardIcon';
 import { useUser } from '../hooks/useUser';
 import { signOut } from '../services/authService';
 import { useLocalization } from '../hooks/useLocalization';
@@ -122,7 +121,6 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <LanguageSelector />
                 {user ? (
                     <div className="flex items-center gap-2">
-                         <NavButton page="subscription" currentPage={currentPage} onNavigate={onNavigate} icon={<CreditCardIcon className="h-5 w-5" />} label={t('nav.subscription')} />
                         <button
                             onClick={() => onNavigate('account')}
                             className={`p-2 rounded-full transition-colors ${

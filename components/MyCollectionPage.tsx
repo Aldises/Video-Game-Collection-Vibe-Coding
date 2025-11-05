@@ -296,8 +296,9 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     });
   };
 
-  // This was incorrectly inferring the return type as `unknown[]`.
-  // Replaced with `flatMap` for robust type inference.
+  // FIX: Using .map() on a nested structure created a `number[][]` instead of `number[]`.
+  // Replaced with `flatMap` to correctly flatten the array of IDs into a single dimension.
+  // Added an explicit type annotation to `useMemo` for better type safety.
   const allRemovableIds = useMemo<number[]>(() => {
     return duplicateGroups.flatMap(group => group.items.slice(1).map(item => item.id!));
   }, [duplicateGroups]);

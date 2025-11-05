@@ -21,8 +21,7 @@
     "collection": "Meine Sammlung",
     "wishlist": "Meine Wunschliste",
     "analytics": "Analysen",
-    "account": "Mein Konto",
-    "subscription": "Abonnement"
+    "account": "Mein Konto"
   },
   "header": {
     "title": "KI-Spiele-Scanner",
@@ -174,6 +173,9 @@
     "errorUpload": "Bitte laden Sie eine gültige .csv-Datei hoch.",
     "alertEmptyCollection": "Ihre Sammlung ist leer."
   },
+  "db": {
+    "fetchError": "Daten konnten nicht von der Datenbank abgerufen werden. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+  },
   "conditions": {
     "boxed": "In OVP",
     "loose": "Lose",
@@ -230,7 +232,10 @@
     "themeDescription": "Wählen Sie, wie die Anwendung aussieht.",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
-    "themeSystem": "System"
+    "themeSystem": "System",
+    "plansTitle": "Wählen Sie Ihren Plan",
+    "plansDescription": "Schalten Sie mehr Funktionen frei und entfernen Sie Limits, indem Sie Ihren Plan upgraden.",
+    "cancelUpgrade": "Abbrechen"
   },
   "authFlows": {
     "emailConfirmedTitle": "E-Mail bestätigt!",
@@ -279,8 +284,6 @@
     "contactError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
   },
   "subscription": {
-    "title": "Wählen Sie Ihren Plan",
-    "description": "Schalten Sie mehr Funktionen frei und entfernen Sie Limits, indem Sie Ihren Plan upgraden.",
     "choosePlan": "Diesen Plan wählen",
     "currentPlan": "Aktueller Plan"
   },

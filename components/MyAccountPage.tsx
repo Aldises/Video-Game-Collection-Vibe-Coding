@@ -12,9 +12,10 @@ import { MoonIcon } from './icons/MoonIcon';
 import { ComputerDesktopIcon } from './icons/ComputerDesktopIcon';
 import Modal from './Modal';
 import { CreditCardIcon } from './icons/CreditCardIcon';
-import { Page } from '../App';
-import { redirectToCustomerPortal } from '../services/stripeService';
+import { redirectToCustomerPortal, redirectToCheckout } from '../services/stripeService';
 import { useUser } from '../hooks/useUser';
+import { CheckIcon } from './icons/CheckIcon';
+import { XIcon } from './icons/XIcon';
 
 const ThemeSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -48,13 +49,9 @@ const ThemeSwitcher: React.FC = () => {
   );
 };
 
-interface MyAccountPageProps {
-  onNavigate: (page: Page) => void;
-}
-
-const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
+const MyAccountPage: React.FC = () => {
     const { t } = useLocalization();
-    const { user } = useUser();
+    const { user, refetchUser } = useUser();
 
     // Generic states
     const [loading, setLoading] = useState(false);
@@ -77,6 +74,11 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
     const [enrollmentFactorId, setEnrollmentFactorId] = useState<string | null>(null);
     const [isDisableMfaModalOpen, setIsDisableMfaModalOpen] = useState(false);
     const [mfaCodeForDisable, setMfaCodeForDisable] = useState('');
+    
+    // Subscription states
+    const [isSelectingPlan, setIsSelectingPlan] = useState(false);
+    const [isCheckoutLoading, setIsCheckoutLoading] = useState<string | null>(null);
+    const currentPlan = user?.profile?.subscription_tier || 'free';
 
 
     const checkMfaStatus = useCallback(async () => {
@@ -95,8 +97,11 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
     }, [t]);
 
     useEffect(() => {
+        // Refetch user data when the page loads to get the latest subscription status
+        // after returning from the Stripe checkout page.
+        refetchUser(true);
         checkMfaStatus();
-    }, [checkMfaStatus]);
+    }, [refetchUser, checkMfaStatus]);
 
     const handlePasswordUpdateAttempt = (e: FormEvent) => {
         e.preventDefault();
@@ -222,6 +227,57 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
             setLoading(false);
         }
     }
+    
+    const handleChoosePlan = async (planId: 'lite' | 'premium') => {
+        setIsCheckoutLoading(planId);
+        await redirectToCheckout(planId);
+        setIsCheckoutLoading(null);
+    };
+    
+    const plans = [
+      {
+        id: 'free',
+        name: t('plans.free.name'),
+        price: '$0',
+        priceDetails: t('plans.free.priceDetails'),
+        features: [
+            { text: t('plans.features.collectionLimit', { limit: 100 }), included: true },
+            { text: t('plans.features.wishlistLimit', { limit: 20 }), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
+            { text: t('plans.features.aiScan'), included: false },
+            { text: t('plans.features.unlimitedCollection'), included: false },
+        ],
+        planId: null
+      },
+      {
+        id: 'lite',
+        name: t('plans.lite.name'),
+        price: '$2.99',
+        priceDetails: t('plans.lite.priceDetails'),
+        features: [
+            { text: t('plans.features.collectionLimit', { limit: 100 }), included: true },
+            { text: t('plans.features.wishlistLimit', { limit: 20 }), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
+            { text: t('plans.features.aiScanLimited', { limit: 10 }), included: true },
+            { text: t('plans.features.unlimitedCollection'), included: false },
+        ],
+        planId: 'lite' as 'lite' | 'premium'
+      },
+      {
+        id: 'premium',
+        name: t('plans.premium.name'),
+        price: '$9.99',
+        priceDetails: t('plans.premium.priceDetails'),
+        features: [
+            { text: t('plans.features.collectionLimit', { limit: t('plans.features.unlimited') }), included: true },
+            { text: t('plans.features.wishlistLimit', { limit: t('plans.features.unlimited') }), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
+            { text: t('plans.features.aiScanUnlimited'), included: true },
+            { text: t('plans.features.unlimitedCollection'), included: true },
+        ],
+        planId: 'premium' as 'lite' | 'premium'
+      }
+  ];
 
     if (isMfaSetup) {
         return (
@@ -351,15 +407,73 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
                     <CreditCardIcon className="h-6 w-6 text-brand-primary" />
                     <h3 className="text-xl font-bold">{t('account.subscriptionTitle')}</h3>
                 </div>
-                <p className="text-neutral-700 dark:text-neutral-300 mb-4">{t('account.subscriptionDescription', { plan: user?.profile?.subscription_tier })}</p>
-                {user?.profile?.subscription_tier !== 'free' ? (
-                     <button onClick={handleManageSubscription} disabled={loading} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-600 hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-wait">
-                           {loading ? t('common.processing') : t('account.manageSubscriptionButton')}
-                     </button>
+                {!isSelectingPlan ? (
+                    <>
+                        <p className="text-neutral-700 dark:text-neutral-300 mb-4">{t('account.subscriptionDescription', { plan: user?.profile?.subscription_tier })}</p>
+                        {currentPlan !== 'free' ? (
+                             <button onClick={handleManageSubscription} disabled={loading} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-600 hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-wait">
+                                   {loading ? t('common.processing') : t('account.manageSubscriptionButton')}
+                             </button>
+                        ) : (
+                             <button onClick={() => setIsSelectingPlan(true)} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90">
+                                   {t('account.upgradeButton')}
+                             </button>
+                        )}
+                    </>
                 ) : (
-                     <button onClick={() => onNavigate('subscription')} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90">
-                           {t('account.upgradeButton')}
-                     </button>
+                    <div className="space-y-8">
+                        <div>
+                            <h4 className="text-2xl font-bold text-neutral-900 dark:text-neutral-light">{t('account.plansTitle')}</h4>
+                            <p className="text-neutral-500 dark:text-neutral-400 mt-1">{t('account.plansDescription')}</p>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                            {plans.map(plan => {
+                                const isCurrentPlan = currentPlan === plan.id;
+                                return (
+                                    <div 
+                                        key={plan.id}
+                                        className={`flex flex-col bg-white/20 dark:bg-neutral-dark/20 border rounded-xl shadow-lg transition-all ${isCurrentPlan ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-neutral-900/10 dark:border-neutral-light/10'}`}
+                                    >
+                                        <div className="p-8">
+                                            <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-light">{plan.name}</h3>
+                                            <p className="mt-4">
+                                                <span className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-light">{plan.price}</span>
+                                                <span className="text-base font-medium text-neutral-500 dark:text-neutral-400"> / {plan.priceDetails}</span>
+                                            </p>
+                                        </div>
+                                        <div className="p-8 bg-black/5 dark:bg-white/5 flex-grow">
+                                            <ul className="space-y-4">
+                                                {plan.features.map(feature => (
+                                                    <li key={feature.text} className="flex items-start">
+                                                        {feature.included ? <CheckIcon className="h-6 w-6 text-green-500 mr-2 flex-shrink-0" /> : <XIcon className="h-6 w-6 text-red-500 mr-2 flex-shrink-0" />}
+                                                        <span className="text-neutral-700 dark:text-neutral-300">{feature.text}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="p-8">
+                                            {isCurrentPlan ? (
+                                                <button disabled className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg cursor-default">
+                                                    {t('subscription.currentPlan')}
+                                                </button>
+                                            ) : plan.planId ? (
+                                                <button 
+                                                    onClick={() => handleChoosePlan(plan.planId!)}
+                                                    disabled={isCheckoutLoading !== null}
+                                                    className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-wait"
+                                                >
+                                                    {isCheckoutLoading === plan.id ? t('common.processing') : t('subscription.choosePlan')}
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <button onClick={() => setIsSelectingPlan(false)} className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+                            {t('account.cancelUpgrade')}
+                        </button>
+                    </div>
                 )}
             </div>
 

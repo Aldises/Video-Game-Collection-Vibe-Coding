@@ -54,7 +54,9 @@ serve(async (req) => {
       .eq("id", user.id)
       .single();
 
-    if (error) throw error;
+    if (error && error.code !== 'PGRST116') { // Allow 'not found' error
+      throw error;
+    }
 
     let customerId = profile?.stripe_customer_id;
     if (!customerId) {
@@ -71,8 +73,8 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       customer: customerId,
-      success_url: `${siteUrl}/#subscription`,
-      cancel_url: `${siteUrl}/#subscription`,
+      success_url: `${siteUrl}/#account`,
+      cancel_url: `${siteUrl}/#account`,
     });
 
     return new Response(JSON.stringify({ sessionId: session.id }), {

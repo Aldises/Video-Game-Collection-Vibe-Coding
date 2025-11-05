@@ -15,7 +15,6 @@ import MyAccountPage from './components/MyAccountPage';
 import EmailConfirmedPage from './components/EmailConfirmedPage';
 import PasswordResetPage from './components/PasswordResetPage';
 import HomePage from './components/HomePage';
-import SubscriptionPage from './components/SubscriptionPage';
 import { useUser } from './hooks/useUser';
 import { getUserCollection, getUserWishlist, addToCollection, addToWishlist, addManualItemToCollection, addManualItemToWishlist } from './services/dbService';
 import { useLocalization } from './hooks/useLocalization';
@@ -23,7 +22,7 @@ import { supabase } from './services/supabaseClient';
 import Modal from './components/Modal';
 import ManualAddForm from './components/ManualAddForm';
 
-export type Page = 'home' | 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account' | 'subscription';
+export type Page = 'home' | 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account';
 
 const App: React.FC = () => {
   const { user, loading, refetchUser } = useUser();
@@ -92,12 +91,17 @@ const App: React.FC = () => {
 
   const refetchData = useCallback(async () => {
     if (user) {
-      const newCollection = await getUserCollection(user.id);
-      const newWishlist = await getUserWishlist(user.id);
-      setCollection(newCollection);
-      setWishlist(newWishlist);
+      try {
+        const newCollection = await getUserCollection(user.id);
+        const newWishlist = await getUserWishlist(user.id);
+        setCollection(newCollection);
+        setWishlist(newWishlist);
+      } catch(e) {
+        console.error("Failed to refetch data", e);
+        setError(t('db.fetchError'));
+      }
     }
-  }, [user]);
+  }, [user, t]);
 
   useEffect(() => {
     refetchData();
@@ -124,7 +128,7 @@ const App: React.FC = () => {
 
       setInventory(itemsWithSourceIds);
       // Refetch user to get latest scan count
-      refetchUser();
+      refetchUser(true);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? t(err.message) : t('scanner.errorGeneric');
@@ -260,9 +264,7 @@ const App: React.FC = () => {
         case 'analytics':
             return <AnalyticsPage collection={collection} />;
         case 'account':
-            return <MyAccountPage onNavigate={setCurrentPage} />;
-        case 'subscription':
-            return <SubscriptionPage onNavigate={setCurrentPage}/>;
+            return <MyAccountPage />;
         case 'home': // User is logged in, redirect home to scanner
         default:
             return renderScannerPage();
@@ -295,7 +297,7 @@ const App: React.FC = () => {
         confirmText={t('limits.upgradeButton')}
         onConfirm={() => {
           setIsLimitModalOpen(false);
-          setCurrentPage('subscription');
+          setCurrentPage('account');
         }}
     >
       <p>{limitModalContent.message}</p>
