@@ -5,6 +5,7 @@ export interface Profile {
   subscription_tier: SubscriptionTier;
   scans_used_this_month: number;
   scan_usage_reset_at: string;
+  stripe_customer_id: string | null;
 }
 
 export interface User {
@@ -19,7 +20,7 @@ export interface AuthCredentials {
 }
 
 export interface SignInResult {
-    user: User;
+    user: User | null;
     mfaRequired: boolean;
     factorId?: string;
 }

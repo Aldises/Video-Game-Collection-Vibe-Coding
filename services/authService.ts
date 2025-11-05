@@ -13,9 +13,13 @@ export const signUp = async ({ email, password }: AuthCredentials): Promise<User
   if (!data.user) {
     throw new Error('Sign up failed: no user returned.');
   }
+  
+  // The database trigger 'on_auth_user_created' is now solely responsible for creating the profile.
+  // This avoids RLS (Row Level Security) issues on the client-side immediately after sign-up,
+  // which was the cause of the '[object Object]' error.
 
   sessionStorage.setItem('awaiting_confirmation', 'true');
-  // FIX: Property 'profile' is missing in type '{ id: any; email: any; }' but required in type 'User'.
+  // The returned user object here is temporary until the context fetches the full profile.
   return { id: data.user.id, email: data.user.email ?? null, profile: null };
 };
 

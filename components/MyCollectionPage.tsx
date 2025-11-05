@@ -296,9 +296,10 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
     });
   };
 
-  // FIX: Explicitly set the type for `useMemo` to `number[]` to fix downstream type inference errors.
+  // This was incorrectly inferring the return type as `unknown[]`.
+  // Replaced with `flatMap` for robust type inference.
   const allRemovableIds = useMemo<number[]>(() => {
-    return duplicateGroups.flatMap(g => g.items.slice(1).map(i => i.id!));
+    return duplicateGroups.flatMap(group => group.items.slice(1).map(item => item.id!));
   }, [duplicateGroups]);
 
   const handleSelectAllRemovable = (e: React.ChangeEvent<HTMLInputElement>) => {

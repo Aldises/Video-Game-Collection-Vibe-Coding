@@ -19,23 +19,25 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchUserProfile = useCallback(async (userId: string, email: string | null) => {
-    try {
-        const profile = await getUserProfile(userId);
-        setUser({ id: userId, email, profile });
-    } catch (error) {
-        console.error("Failed to fetch user profile, setting basic user object.", error);
-        setUser({ id: userId, email, profile: null });
-    }
-  }, []);
-  
   const refetchUser = useCallback(async () => {
-    if (user) {
-        setLoading(true);
-        await fetchUserProfile(user.id, user.email);
+    setLoading(true);
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const profile = await getUserProfile(session.user.id);
+            setUser({ id: session.user.id, email: session.user.email || null, profile });
+        } else {
+            setUser(null);
+        }
+    } catch (error) {
+        console.error("Error during user refetch:", error);
+        // We don't nullify the user on a failed refetch,
+        // as it might be a temporary network issue.
+        // The old user data will persist until a successful fetch or logout.
+    } finally {
         setLoading(false);
     }
-  }, [user, fetchUserProfile]);
+  }, []); // Empty dependency array ensures this function is stable.
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -57,7 +59,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(null)
         } else if (currentUser) {
           console.log('✅ Session is valid. User is authenticated.')
-          await fetchUserProfile(currentUser.id, currentUser.email || null);
+          try {
+            const profile = await getUserProfile(currentUser.id);
+            setUser({ id: currentUser.id, email: currentUser.email || null, profile });
+          } catch (error: any) {
+              console.error("Failed to fetch user profile, setting basic user object.", {
+                  message: error.message,
+                  stack: error.stack,
+                  fullError: error
+              });
+              setUser({ id: currentUser.id, email: currentUser.email || null, profile: null });
+          }
         } else {
           setUser(null);
         }
@@ -69,7 +81,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     })
 
     return () => subscription.unsubscribe()
-  }, [fetchUserProfile])
+  }, []) // Empty dependency array ensures this effect runs only once on mount.
 
   return (
     <UserContext.Provider value={{ user, loading, refetchUser }}>

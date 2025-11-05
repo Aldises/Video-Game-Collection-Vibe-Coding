@@ -1,4 +1,4 @@
-import { GameItem, PriceEstimate, Profile } from '../types';
+import { GameItem, Profile } from '../types';
 import { supabase } from './supabaseClient';
 import { fetchPriceForItem } from './geminiService';
 
@@ -7,18 +7,18 @@ type DbPriceEstimate = {
   id: number;
   collection_item_id: number;
   source: string;
-  currency: string;
-  low_price: number;
-  average_price: number;
-  high_price: number;
+  currency: string | null;
+  low_price: number | null;
+  average_price: number | null;
+  high_price: number | null;
 };
 
 type DbCollectionItem = {
   id: number;
   title: string;
-  publisher: string;
+  publisher: string | null;
   platform: string;
-  release_year: number;
+  release_year: number | null;
   item_type: 'Game' | 'Console' | 'Accessory';
   condition: 'Boxed' | 'Loose' | 'Unknown';
   price_estimates: DbPriceEstimate[];
@@ -27,102 +27,79 @@ type DbCollectionItem = {
 const mapDbItemToGameItem = (dbItem: DbCollectionItem): GameItem => ({
   id: dbItem.id,
   title: dbItem.title,
-  publisher: dbItem.publisher,
+  publisher: dbItem.publisher || '', // Safely handle null publisher
   platform: dbItem.platform,
-  releaseYear: dbItem.release_year,
+  releaseYear: dbItem.release_year || 0, // Safely handle null releaseYear
   itemType: dbItem.item_type,
   condition: dbItem.condition,
-  estimatedPrices: dbItem.price_estimates.map(p => ({
+  estimatedPrices: (dbItem.price_estimates || []).map(p => ({
     source: p.source,
-    currency: p.currency,
-    low: p.low_price,
-    average: p.average_price,
-    high: p.high_price,
+    currency: p.currency || '',
+    low: p.low_price || 0,
+    average: p.average_price || 0,
+    high: p.high_price || 0,
   })),
 });
 
+// Centralized error handler for better logging
+const logAndThrow = (context: string, error: any) => {
+    const errorMessage = error.message || 'An unknown database error occurred.';
+    console.error(`[dbService Error] ${context}:`, {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        fullError: error
+    });
+    throw new Error(errorMessage);
+};
+
 export const getUserProfile = async (userId: string): Promise<Profile> => {
-    let { data, error } = await supabase
+    const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-    // If profile doesn't exist, create it. This handles users created before profiles table existed.
-    // PostgREST error `PGRST116` indicates that the query returned no rows.
-    if (error && error.code === 'PGRST116') {
-        console.log(`No profile found for user ${userId}, creating one.`);
-        const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
-            .insert({ id: userId })
-            .select()
-            .single();
-
-        if (insertError) {
-            console.error("Error creating profile:", insertError);
-            throw new Error(insertError.message);
+    if (error) {
+        if (error.code === 'PGRST116') {
+            const errorMessage = `Inconsistency: No profile found for user ${userId}. A database trigger should have created one.`;
+            console.error(errorMessage, error);
+            throw new Error(errorMessage);
         }
-        return newProfile as Profile;
-    } else if (error) {
-        console.error("Error fetching profile:", error);
-        throw new Error(error.message);
+        logAndThrow('Fetching user profile', error);
     }
 
     return data as Profile;
 }
 
 export const getUserCollection = async (userId: string): Promise<GameItem[]> => {
-  // Step 1: Fetch main collection items.
-  const { data: itemsData, error: itemsError } = await supabase
-    .from('collection_items')
-    .select('*')
-    .eq('user_id', userId);
-  
-  if (itemsError) {
-    console.error("Error fetching collection items:", itemsError);
-    throw new Error(itemsError.message);
-  }
+  try {
+      // Optimized to fetch collection items and their related prices in a single query.
+      const { data, error } = await supabase
+        .from('collection_items')
+        .select(`
+          *,
+          price_estimates (
+            *
+          )
+        `)
+        .eq('user_id', userId);
 
-  if (!itemsData || itemsData.length === 0) {
-    return [];
-  }
-
-  const itemIds = itemsData.map(item => item.id);
-
-  // Step 2: Fetch price estimates for those items.
-  const { data: pricesData, error: pricesError } = await supabase
-    .from('price_estimates')
-    .select('*')
-    .in('collection_item_id', itemIds);
-
-  if (pricesError) {
-    console.error("Error fetching price estimates:", pricesError);
-    // Don't throw; we can still show items without prices.
-  }
-
-  // Step 3: Map prices to their respective items for efficient lookup.
-  const pricesMap = new Map<number, DbPriceEstimate[]>();
-  if (pricesData) {
-    for (const price of pricesData) {
-      const id = price.collection_item_id;
-      if (!pricesMap.has(id)) {
-        pricesMap.set(id, []);
+      if (error) {
+        logAndThrow('Fetching collection items with prices', error);
       }
-      pricesMap.get(id)!.push(price as DbPriceEstimate);
-    }
+      
+      if (!data) {
+        return [];
+      }
+
+      // Map the combined data structure safely to the application's GameItem type.
+      return data.map(item => mapDbItemToGameItem(item as unknown as DbCollectionItem));
+
+  } catch (error) {
+    console.error("Critical error in getUserCollection:", error);
+    throw error;
   }
-
-  // Step 4: Combine items and their prices, then map to the app's data structure.
-  const collectionWithPrices = itemsData.map(item => {
-    const prices = pricesMap.get(item.id) || [];
-    const dbItem: DbCollectionItem = {
-      ...item,
-      price_estimates: prices,
-    };
-    return mapDbItemToGameItem(dbItem);
-  });
-
-  return collectionWithPrices;
 };
 
 
@@ -133,11 +110,24 @@ export const getUserWishlist = async (userId: string): Promise<GameItem[]> => {
       .eq('user_id', userId);
 
     if (error) {
-      console.error("Error fetching wishlist:", error);
-      throw new Error(error.message);
+      logAndThrow('Fetching wishlist items', error);
     }
-    // Wishlist items don't have prices, so we add an empty array
-    return data.map(item => ({ ...item, releaseYear: item.release_year, itemType: item.item_type, estimatedPrices: [] }));
+    
+    if (!data) {
+        return [];
+    }
+    
+    // Safely map wishlist items to the GameItem type, providing defaults for nullable fields.
+    return data.map(item => ({
+        id: item.id,
+        title: item.title,
+        publisher: item.publisher || '', // Handle null
+        platform: item.platform,
+        releaseYear: item.release_year || 0, // Handle null
+        itemType: item.item_type,
+        condition: item.condition,
+        estimatedPrices: [], // Wishlist items do not have prices.
+    }));
 };
 
 export const addToCollection = async (userId: string, items: GameItem[]): Promise<void> => {

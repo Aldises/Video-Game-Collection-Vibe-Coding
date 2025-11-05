@@ -234,16 +234,16 @@
   },
   "authFlows": {
     "emailConfirmedTitle": "Email Confirmed!",
-    "emailConfirmedMessage": "Your account has been successfully verified. You can now log in and start managing your collection.",
-    "goToAppButton": "Go to the App",
+    "emailConfirmedMessage": "Your account has been successfully verified. You can now sign in and start managing your collection.",
+    "goToAppButton": "Go to App",
     "passwordResetTitle": "Reset Your Password",
-    "passwordResetDescription": "Enter a new secure password for your account.",
+    "passwordResetDescription": "Enter a new, secure password for your account.",
     "newPasswordLabel": "New Password",
     "confirmPasswordLabel": "Confirm New Password",
     "resetPasswordButton": "Set New Password",
-    "passwordResetSuccess": "Your password has been successfully reset. You can now log in with your new password.",
+    "passwordResetSuccess": "Your password has been reset successfully. You can now log in with your new password.",
     "backToLoginButton": "Back to Login",
-    "passwordMismatch": "The new passwords do not match."
+    "passwordMismatch": "New passwords do not match."
   },
   "pagination": {
     "itemsPerPage": "Items per page",
@@ -254,7 +254,7 @@
   },
   "home": {
     "heroTitle": "Catalog Your Video Game Collection Instantly",
-    "heroSubtitle": "Use the power of AI to scan, identify, and inventory your entire collection. Get detailed information and real-time price estimates with just a photo.",
+    "heroSubtitle": "Use the power of AI to scan, identify, and inventory your entire collection. Get detailed info and real-time price estimates with just a photo.",
     "heroCta": "Get Started for Free",
     "featuresTitle": "All-in-One Collection Management",
     "feature1Title": "AI-Powered Scanning",
@@ -262,12 +262,12 @@
     "feature2Title": "Detailed Inventory",
     "feature2Desc": "Automatically get rich details for each item, including platform, release year, publisher, and physical condition.",
     "feature3Title": "Market Price Tracking",
-    "feature3Desc": "Stay updated with current market values from multiple online marketplaces to understand the worth of your collection.",
+    "feature3Desc": "Stay up-to-date with current market values from multiple online marketplaces to understand the worth of your collection.",
     "feature4Title": "Collection & Wishlist",
     "feature4Desc": "Easily organize what you own and keep a separate list of the games and hardware you're looking for.",
     "mockupsTitle": "See It In Action",
-    "pricingTitle": "Flexible Plans for Every Collector",
-    "pricingDescription": "Start for free and upgrade as your collection grows. No hidden fees, cancel anytime.",
+    "pricingTitle": "Flexible plans for every collector",
+    "pricingDescription": "Choose a plan that fits the size of your collection and your needs.",
     "contactTitle": "Get In Touch",
     "contactDesc": "Have questions or feedback? We'd love to hear from you.",
     "contactNameLabel": "Your Name",
@@ -275,11 +275,11 @@
     "contactMessageLabel": "Your Message",
     "contactSend": "Send Message",
     "contactSending": "Sending...",
-    "contactSuccess": "Thank you for your message! We'll get back to you soon.",
+    "contactSuccess": "Thanks for your message! We'll get back to you soon.",
     "contactError": "An error occurred. Please try again later."
   },
   "subscription": {
-    "title": "Choose Your Plan",
+    "title": "Choose your plan",
     "description": "Unlock more features and remove limits by upgrading your plan.",
     "choosePlan": "Choose Plan",
     "currentPlan": "Current Plan"
@@ -298,24 +298,24 @@
       "priceDetails": "per month"
     },
     "features": {
-      "collectionLimit": "Up to {limit} items in collection",
-      "wishlistLimit": "Up to {limit} items in wishlist",
-      "manualAdd": "Add items manually",
-      "aiScan": "AI-powered photo scanning",
-      "aiScanLimited": "AI photo scanning ({limit}/month)",
-      "aiScanUnlimited": "Unlimited AI photo scanning",
-      "unlimitedCollection": "Unlimited collection & wishlist",
+      "collectionLimit": "Up to {limit} collection items",
+      "wishlistLimit": "Up to {limit} wishlist items",
+      "manualAdd": "Manual item adding",
+      "aiScan": "AI Photo Scanning",
+      "aiScanLimited": "AI Photo Scanning ({limit}/month)",
+      "aiScanUnlimited": "Unlimited AI Photo Scanning",
+      "unlimitedCollection": "Unlimited Collection & Wishlist",
       "unlimited": "Unlimited"
     }
   },
   "limits": {
     "collection": {
       "title": "Collection Limit Reached",
-      "message": "You have reached the limit of {limit} items for your collection. Please upgrade your plan to add more."
+      "message": "You have reached the {limit} item limit for your collection. Please upgrade your plan to add more."
     },
     "wishlist": {
       "title": "Wishlist Limit Reached",
-      "message": "You have reached the limit of {limit} items for your wishlist. Please upgrade your plan to add more."
+      "message": "You have reached the {limit} item limit for your wishlist. Please upgrade your plan to add more."
     },
     "upgradeButton": "Upgrade Plan"
   },

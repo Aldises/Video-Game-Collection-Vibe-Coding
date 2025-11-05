@@ -79,7 +79,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
             { text: t('plans.features.manualAdd'), included: true },
             { text: t('plans.features.aiScan'), included: false },
         ],
-        ctaText: t('home.heroCta')
+        ctaText: t('header.login')
       },
       {
         id: 'lite',
@@ -89,6 +89,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
         features: [
             { text: t('plans.features.collectionLimit', { limit: 100 }), included: true },
             { text: t('plans.features.wishlistLimit', { limit: 20 }), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
             { text: t('plans.features.aiScanLimited', { limit: 10 }), included: true },
         ],
         ctaText: t('subscription.choosePlan')
@@ -100,10 +101,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
         priceDetails: t('plans.premium.priceDetails'),
         features: [
             { text: t('plans.features.unlimitedCollection'), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
             { text: t('plans.features.aiScanUnlimited'), included: true },
         ],
         isFeatured: true,
-        ctaText: t('subscription.choosePlan')
+        ctaText: t('header.login')
       }
   ];
 
@@ -186,9 +188,9 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
             {plans.map(plan => (
                 <div 
                     key={plan.id}
-                    className={`flex flex-col text-left bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border rounded-xl shadow-2xl transition-all ${plan.isFeatured ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-neutral-900/10 dark:border-neutral-light/10'}`}
+                    className={`relative flex flex-col text-left bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border rounded-xl shadow-2xl transition-all ${plan.isFeatured ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-neutral-900/10 dark:border-neutral-light/10'}`}
                 >
-                    <div className="p-8">
+                    <div className={`p-8 ${plan.isFeatured ? 'pt-12' : ''}`}>
                         <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-light">{plan.name}</h3>
                         <p className="mt-4">
                             <span className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-light">{plan.price}</span>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocalization } from '../hooks/useLocalization';
 import { useUser } from '../hooks/useUser';
 import { redirectToCheckout } from '../services/stripeService';
@@ -12,8 +12,14 @@ interface SubscriptionPageProps {
 
 const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onNavigate }) => {
   const { t } = useLocalization();
-  const { user } = useUser();
+  const { user, refetchUser } = useUser();
   const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Refetch user data when the page loads to get the latest subscription status
+    // after returning from the Stripe checkout page.
+    refetchUser();
+  }, [refetchUser]);
 
   const currentPlan = user?.profile?.subscription_tier || 'free';
 
