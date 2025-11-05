@@ -266,13 +266,17 @@
     "feature4Title": "Collection & Wishlist",
     "feature4Desc": "Easily organize what you own and keep a separate list of the games and hardware you're looking for.",
     "mockupsTitle": "See It In Action",
+    "pricingTitle": "Flexible Plans for Every Collector",
+    "pricingDescription": "Start for free and upgrade as your collection grows. No hidden fees, cancel anytime.",
     "contactTitle": "Get In Touch",
     "contactDesc": "Have questions or feedback? We'd love to hear from you.",
     "contactNameLabel": "Your Name",
     "contactEmailLabel": "Your Email",
     "contactMessageLabel": "Your Message",
     "contactSend": "Send Message",
-    "contactSuccess": "Thank you for your message! We'll get back to you soon."
+    "contactSending": "Sending...",
+    "contactSuccess": "Thank you for your message! We'll get back to you soon.",
+    "contactError": "An error occurred. Please try again later."
   },
   "subscription": {
     "title": "Choose Your Plan",

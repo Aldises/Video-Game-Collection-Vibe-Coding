@@ -4,6 +4,9 @@ import { ScanIcon } from './icons/ScanIcon';
 import { CollectionIcon } from './icons/CollectionIcon';
 import { AnalyticsIcon } from './icons/AnalyticsIcon';
 import { WishlistIcon } from './icons/WishlistIcon';
+import { supabase } from '../services/supabaseClient';
+import { CheckIcon } from './icons/CheckIcon';
+import { XIcon } from './icons/XIcon';
 
 interface HomePageProps {
   onNavigateToLogin: () => void;
@@ -33,21 +36,76 @@ const MockupCard: React.FC<{ title: string, children: React.ReactNode }> = ({ ti
 const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
   const { t } = useLocalization();
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formState, setFormState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleContactSubmit = (e: FormEvent) => {
+  const handleContactSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-        setIsSubmitted(false);
+    setFormState('loading');
+    setFormError(null);
+    
+    try {
+        const { error } = await supabase.functions.invoke('send-contact-email', {
+            body: contactForm,
+        });
+
+        if (error) throw new Error(error.message);
+
+        setFormState('success');
         setContactForm({ name: '', email: '', message: '' });
-    }, 3000);
+
+    } catch(err) {
+        setFormState('error');
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setFormError(t('home.contactError', { error: errorMessage }));
+        console.error("Contact form error:", err);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setContactForm(prev => ({ ...prev, [name]: value }));
   };
+
+  const plans = [
+      {
+        id: 'free',
+        name: t('plans.free.name'),
+        price: '$0',
+        priceDetails: t('plans.free.priceDetails'),
+        features: [
+            { text: t('plans.features.collectionLimit', { limit: 100 }), included: true },
+            { text: t('plans.features.wishlistLimit', { limit: 20 }), included: true },
+            { text: t('plans.features.manualAdd'), included: true },
+            { text: t('plans.features.aiScan'), included: false },
+        ],
+        ctaText: t('home.heroCta')
+      },
+      {
+        id: 'lite',
+        name: t('plans.lite.name'),
+        price: '$2.99',
+        priceDetails: t('plans.lite.priceDetails'),
+        features: [
+            { text: t('plans.features.collectionLimit', { limit: 100 }), included: true },
+            { text: t('plans.features.wishlistLimit', { limit: 20 }), included: true },
+            { text: t('plans.features.aiScanLimited', { limit: 10 }), included: true },
+        ],
+        ctaText: t('subscription.choosePlan')
+      },
+      {
+        id: 'premium',
+        name: t('plans.premium.name'),
+        price: '$9.99',
+        priceDetails: t('plans.premium.priceDetails'),
+        features: [
+            { text: t('plans.features.unlimitedCollection'), included: true },
+            { text: t('plans.features.aiScanUnlimited'), included: true },
+        ],
+        isFeatured: true,
+        ctaText: t('subscription.choosePlan')
+      }
+  ];
 
   return (
     <div className="w-full max-w-7xl animate-fade-in space-y-20 md:space-y-32">
@@ -120,12 +178,52 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+       <section className="max-w-5xl mx-auto text-center">
+        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light mb-4">{t('home.pricingTitle')}</h2>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-12 max-w-2xl mx-auto">{t('home.pricingDescription')}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+            {plans.map(plan => (
+                <div 
+                    key={plan.id}
+                    className={`flex flex-col text-left bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border rounded-xl shadow-2xl transition-all ${plan.isFeatured ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-neutral-900/10 dark:border-neutral-light/10'}`}
+                >
+                    <div className="p-8">
+                        <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-light">{plan.name}</h3>
+                        <p className="mt-4">
+                            <span className="text-4xl font-extrabold text-neutral-900 dark:text-neutral-light">{plan.price}</span>
+                            <span className="text-base font-medium text-neutral-500 dark:text-neutral-400"> / {plan.priceDetails}</span>
+                        </p>
+                    </div>
+                    <div className="p-8 bg-black/5 dark:bg-white/5 flex-grow">
+                         <ul className="space-y-4">
+                            {plan.features.map(feature => (
+                                 <li key={feature.text} className="flex items-start">
+                                    {feature.included ? <CheckIcon className="h-6 w-6 text-green-500 mr-2 flex-shrink-0" /> : <XIcon className="h-6 w-6 text-red-500 mr-2 flex-shrink-0" />}
+                                    <span className="text-neutral-700 dark:text-neutral-300">{feature.text}</span>
+                                 </li>
+                            ))}
+                         </ul>
+                    </div>
+                    <div className="p-8">
+                         <button 
+                            onClick={onNavigateToLogin}
+                            className={`w-full font-bold py-3 px-6 rounded-lg transition-opacity ${plan.isFeatured ? 'bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white' : 'bg-white dark:bg-neutral-dark hover:bg-gray-100 dark:hover:bg-neutral-dark/50 text-neutral-800 dark:text-neutral-200 border border-neutral-900/10 dark:border-neutral-light/10'}`}
+                        >
+                            {plan.ctaText}
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+      </section>
+
       {/* Contact Form Section */}
       <section className="max-w-3xl mx-auto text-center pb-10">
         <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light mb-4">{t('home.contactTitle')}</h2>
         <p className="text-neutral-500 dark:text-neutral-400 mb-8">{t('home.contactDesc')}</p>
         <div className="bg-white/5 dark:bg-neutral-dark/30 p-8 rounded-xl border border-neutral-900/10 dark:border-neutral-light/10">
-          {isSubmitted ? (
+          {formState === 'success' ? (
             <p className="text-green-600 dark:text-green-400 font-medium">{t('home.contactSuccess')}</p>
           ) : (
             <form onSubmit={handleContactSubmit} className="space-y-6 text-left">
@@ -141,9 +239,12 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigateToLogin }) => {
                 <label htmlFor="message" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('home.contactMessageLabel')}</label>
                 <textarea name="message" id="message" rows={4} required value={contactForm.message} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-neutral-darker border border-neutral-900/20 dark:border-neutral-light/20 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary"></textarea>
               </div>
+              {formState === 'error' && (
+                <p className="text-red-600 dark:text-red-400 text-sm">{formError}</p>
+              )}
               <div className="text-right">
-                <button type="submit" className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-lg transition-opacity">
-                  {t('home.contactSend')}
+                <button type="submit" disabled={formState === 'loading'} className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-wait">
+                  {formState === 'loading' ? t('home.contactSending') : t('home.contactSend')}
                 </button>
               </div>
             </form>

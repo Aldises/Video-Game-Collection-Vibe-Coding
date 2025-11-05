@@ -266,13 +266,17 @@
     "feature4Title": "Sammlung & Wunschliste",
     "feature4Desc": "Organisieren Sie einfach, was Sie besitzen, und führen Sie eine separate Liste der Spiele und Hardware, die Sie suchen.",
     "mockupsTitle": "Sehen Sie es in Aktion",
+    "pricingTitle": "Flexible Pläne für jeden Sammler",
+    "pricingDescription": "Starten Sie kostenlos und upgraden Sie, wenn Ihre Sammlung wächst. Keine versteckten Gebühren, jederzeit kündbar.",
     "contactTitle": "Kontakt aufnehmen",
     "contactDesc": "Haben Sie Fragen oder Feedback? Wir würden uns freuen, von Ihnen zu hören.",
     "contactNameLabel": "Ihr Name",
     "contactEmailLabel": "Ihre E-Mail",
     "contactMessageLabel": "Ihre Nachricht",
     "contactSend": "Nachricht senden",
-    "contactSuccess": "Vielen Dank für Ihre Nachricht! Wir werden uns bald bei Ihnen melden."
+    "contactSending": "Wird gesendet...",
+    "contactSuccess": "Vielen Dank für Ihre Nachricht! Wir werden uns bald bei Ihnen melden.",
+    "contactError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
   },
   "subscription": {
     "title": "Wählen Sie Ihren Plan",

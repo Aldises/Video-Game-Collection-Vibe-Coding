@@ -266,13 +266,17 @@
     "feature4Title": "Collection & Liste de Souhaits",
     "feature4Desc": "Organisez facilement ce que vous possédez et gardez une liste séparée des jeux et du matériel que vous recherchez.",
     "mockupsTitle": "Découvrez-le en Action",
+    "pricingTitle": "Des forfaits flexibles pour chaque collectionneur",
+    "pricingDescription": "Commencez gratuitement et évoluez au fur et à mesure que votre collection s'agrandit. Sans frais cachés, annulez à tout moment.",
     "contactTitle": "Contactez-nous",
     "contactDesc": "Des questions ou des commentaires ? Nous serions ravis de vous entendre.",
     "contactNameLabel": "Votre Nom",
     "contactEmailLabel": "Votre E-mail",
     "contactMessageLabel": "Votre Message",
     "contactSend": "Envoyer le Message",
-    "contactSuccess": "Merci pour votre message ! Nous vous répondrons bientôt."
+    "contactSending": "Envoi en cours...",
+    "contactSuccess": "Merci pour votre message ! Nous vous répondrons bientôt.",
+    "contactError": "Une erreur est survenue. Veuillez réessayer plus tard."
   },
   "subscription": {
     "title": "Choisissez votre plan",
