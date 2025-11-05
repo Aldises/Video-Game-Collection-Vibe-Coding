@@ -21,7 +21,8 @@
     "collection": "My Collection",
     "wishlist": "My Wishlist",
     "analytics": "Analytics",
-    "account": "My Account"
+    "account": "My Account",
+    "subscription": "Subscription"
   },
   "header": {
     "title": "AI Game Scanner",
@@ -71,7 +72,10 @@
     "errorGeneric": "An unknown error occurred. Please try a different image.",
     "errorEmpty": "The AI returned an empty response. The image might not contain recognizable games or consoles.",
     "errorJson": "The AI failed to provide a valid JSON response. The image might be unclear or contain no recognizable items.",
-    "errorFailed": "Failed to analyze image."
+    "errorFailed": "Failed to analyze image.",
+    "freeTierLimit": "Upgrade to a Lite or Premium plan to use the AI scanner.",
+    "liteTierLimit": "You have used all your AI scans for this month. Upgrade to Premium for unlimited scans.",
+    "scansRemaining": "You have {count} AI scans remaining this month."
   },
   "scanResults": {
     "title": "Scan Results",
@@ -103,6 +107,7 @@
     "export": "Export",
     "removeDuplicates": "Remove Duplicates",
     "updatePrices": "Update Prices",
+    "addManually": "Add Manually",
     "filterTitle": "Filter by Title...",
     "filterPlatform": "All Platforms",
     "filterPublisher": "Filter by Publisher...",
@@ -134,6 +139,7 @@
   },
   "wishlist": {
     "title": "My Wishlist ({count})",
+    "addManually": "Add Manually",
     "confirmRemoveTitle": "Remove Item",
     "confirmRemoveMessage": "Are you sure you want to remove this item from your wishlist?",
     "noMatch": "No items match your current filters.",
@@ -176,6 +182,10 @@
   "account": {
     "title": "My Account",
     "description": "Manage your account settings and security.",
+    "subscriptionTitle": "Subscription",
+    "subscriptionDescription": "You are currently on the {plan} plan.",
+    "manageSubscriptionButton": "Manage Billing",
+    "upgradeButton": "Upgrade Plan",
     "passwordChangeTitle": "Change Password",
     "currentPasswordLabel": "Current Password",
     "newPasswordLabel": "New Password",
@@ -263,5 +273,51 @@
     "contactMessageLabel": "Your Message",
     "contactSend": "Send Message",
     "contactSuccess": "Thank you for your message! We'll get back to you soon."
+  },
+  "subscription": {
+    "title": "Choose Your Plan",
+    "description": "Unlock more features and remove limits by upgrading your plan.",
+    "choosePlan": "Choose Plan",
+    "currentPlan": "Current Plan"
+  },
+  "plans": {
+    "free": {
+      "name": "Free",
+      "priceDetails": "forever"
+    },
+    "lite": {
+      "name": "Lite",
+      "priceDetails": "per month"
+    },
+    "premium": {
+      "name": "Premium",
+      "priceDetails": "per month"
+    },
+    "features": {
+      "collectionLimit": "Up to {limit} items in collection",
+      "wishlistLimit": "Up to {limit} items in wishlist",
+      "manualAdd": "Add items manually",
+      "aiScan": "AI-powered photo scanning",
+      "aiScanLimited": "AI photo scanning ({limit}/month)",
+      "aiScanUnlimited": "Unlimited AI photo scanning",
+      "unlimitedCollection": "Unlimited collection & wishlist",
+      "unlimited": "Unlimited"
+    }
+  },
+  "limits": {
+    "collection": {
+      "title": "Collection Limit Reached",
+      "message": "You have reached the limit of {limit} items for your collection. Please upgrade your plan to add more."
+    },
+    "wishlist": {
+      "title": "Wishlist Limit Reached",
+      "message": "You have reached the limit of {limit} items for your wishlist. Please upgrade your plan to add more."
+    },
+    "upgradeButton": "Upgrade Plan"
+  },
+  "manualForm": {
+    "titleCollection": "Add Item to Collection",
+    "titleWishlist": "Add Item to Wishlist",
+    "addButton": "Add Item"
   }
 }

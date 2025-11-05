@@ -1,23 +1,45 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react'
-import { User } from '../types'
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { User, Profile } from '../types'
 import { supabase } from '../services/supabaseClient'
+import { getUserProfile } from '../services/dbService';
 
 interface UserContextType {
   user: User | null
-  loading: boolean
+  loading: boolean,
+  refetchUser: () => void;
 }
 
 export const UserContext = createContext<UserContextType>({
   user: null,
   loading: true,
+  refetchUser: () => {},
 })
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchUserProfile = useCallback(async (userId: string, email: string | null) => {
+    try {
+        const profile = await getUserProfile(userId);
+        setUser({ id: userId, email, profile });
+    } catch (error) {
+        console.error("Failed to fetch user profile, setting basic user object.", error);
+        setUser({ id: userId, email, profile: null });
+    }
+  }, []);
+  
+  const refetchUser = useCallback(async () => {
+    if (user) {
+        setLoading(true);
+        await fetchUserProfile(user.id, user.email);
+        setLoading(false);
+    }
+  }, [user, fetchUserProfile]);
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setLoading(true);
       const isPasswordRecovery = window.location.hash.includes('type=recovery')
       if (isPasswordRecovery) {
         setUser(null)
@@ -29,21 +51,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const aal = session.aal
         const currentUser = session.user
         console.log('🔐 Auth event:', _event, 'AAL:', aal)
-
-        // If AAL is 'aal1', it means the user has completed the first factor
-        // but not the second one yet. We should NOT set the user in the context
-        // as they are not fully authenticated. The LoginPage handles this state.
+        
         if (aal === 'aal1') {
           console.log('🟠 AAL1 → MFA pending. User is not fully authenticated.')
           setUser(null)
-        } else {
-          // If AAL is 'aal2' (MFA complete) or undefined (for non-MFA users),
-          // the user is fully authenticated.
+        } else if (currentUser) {
           console.log('✅ Session is valid. User is authenticated.')
-          setUser(currentUser ? { id: currentUser.id, email: currentUser.email || null } : null)
+          await fetchUserProfile(currentUser.id, currentUser.email || null);
+        } else {
+          setUser(null);
         }
       } else {
-        // If there is no session, the user is logged out.
         setUser(null)
       }
 
@@ -51,10 +69,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [fetchUserProfile])
 
   return (
-    <UserContext.Provider value={{ user, loading }}>
+    <UserContext.Provider value={{ user, loading, refetchUser }}>
       {children}
     </UserContext.Provider>
   )

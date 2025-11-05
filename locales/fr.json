@@ -21,7 +21,8 @@
     "collection": "Ma Collection",
     "wishlist": "Ma Liste de Souhaits",
     "analytics": "Analyses",
-    "account": "Mon Compte"
+    "account": "Mon Compte",
+    "subscription": "Abonnement"
   },
   "header": {
     "title": "Scanner de Jeux IA",
@@ -71,7 +72,10 @@
     "errorGeneric": "Une erreur inconnue est survenue. Veuillez essayer une autre image.",
     "errorEmpty": "L'IA a renvoyé une réponse vide. L'image pourrait ne pas contenir de jeux ou de consoles reconnaissables.",
     "errorJson": "L'IA n'a pas fourni une réponse JSON valide. L'image pourrait être floue ou ne contenir aucun élément reconnaissable.",
-    "errorFailed": "Échec de l'analyse de l'image."
+    "errorFailed": "Échec de l'analyse de l'image.",
+    "freeTierLimit": "Passez à un plan Lite ou Premium pour utiliser le scanner IA.",
+    "liteTierLimit": "Vous avez utilisé tous vos scans IA pour ce mois-ci. Passez à Premium pour des scans illimités.",
+    "scansRemaining": "Il vous reste {count} scans IA ce mois-ci."
   },
   "scanResults": {
     "title": "Résultats du Scan",
@@ -103,6 +107,7 @@
     "export": "Exporter",
     "removeDuplicates": "Supprimer les doublons",
     "updatePrices": "Mettre à jour les prix",
+    "addManually": "Ajouter manuellement",
     "filterTitle": "Filtrer par Titre...",
     "filterPlatform": "Toutes plateformes",
     "filterPublisher": "Filtrer par Éditeur...",
@@ -134,6 +139,7 @@
   },
   "wishlist": {
     "title": "Ma Liste de Souhaits ({count})",
+    "addManually": "Ajouter manuellement",
     "confirmRemoveTitle": "Supprimer l'article",
     "confirmRemoveMessage": "Êtes-vous sûr de vouloir retirer cet article de votre liste de souhaits ?",
     "noMatch": "Aucun article ne correspond à vos filtres actuels.",
@@ -176,6 +182,10 @@
   "account": {
     "title": "Mon Compte",
     "description": "Gérez les paramètres et la sécurité de votre compte.",
+    "subscriptionTitle": "Abonnement",
+    "subscriptionDescription": "Vous êtes actuellement sur le plan {plan}.",
+    "manageSubscriptionButton": "Gérer la facturation",
+    "upgradeButton": "Changer de plan",
     "passwordChangeTitle": "Changer le mot de passe",
     "currentPasswordLabel": "Mot de passe actuel",
     "newPasswordLabel": "Nouveau mot de passe",
@@ -263,5 +273,51 @@
     "contactMessageLabel": "Votre Message",
     "contactSend": "Envoyer le Message",
     "contactSuccess": "Merci pour votre message ! Nous vous répondrons bientôt."
+  },
+  "subscription": {
+    "title": "Choisissez votre plan",
+    "description": "Débloquez plus de fonctionnalités et supprimez les limites en changeant de plan.",
+    "choosePlan": "Choisir ce plan",
+    "currentPlan": "Plan actuel"
+  },
+  "plans": {
+    "free": {
+      "name": "Gratuit",
+      "priceDetails": "pour toujours"
+    },
+    "lite": {
+      "name": "Lite",
+      "priceDetails": "par mois"
+    },
+    "premium": {
+      "name": "Premium",
+      "priceDetails": "par mois"
+    },
+    "features": {
+      "collectionLimit": "Jusqu'à {limit} articles en collection",
+      "wishlistLimit": "Jusqu'à {limit} articles en liste de souhaits",
+      "manualAdd": "Ajout manuel d'articles",
+      "aiScan": "Scan de photos par IA",
+      "aiScanLimited": "Scan de photos par IA ({limit}/mois)",
+      "aiScanUnlimited": "Scan de photos par IA illimité",
+      "unlimitedCollection": "Collection & liste de souhaits illimitées",
+      "unlimited": "Illimité"
+    }
+  },
+  "limits": {
+    "collection": {
+      "title": "Limite de collection atteinte",
+      "message": "Vous avez atteint la limite de {limit} articles pour votre collection. Veuillez changer de plan pour en ajouter plus."
+    },
+    "wishlist": {
+      "title": "Limite de liste de souhaits atteinte",
+      "message": "Vous avez atteint la limite de {limit} articles pour votre liste de souhaits. Veuillez changer de plan pour en ajouter plus."
+    },
+    "upgradeButton": "Changer de plan"
+  },
+  "manualForm": {
+    "titleCollection": "Ajouter un article à la collection",
+    "titleWishlist": "Ajouter un article à la liste de souhaits",
+    "addButton": "Ajouter l'article"
   }
 }

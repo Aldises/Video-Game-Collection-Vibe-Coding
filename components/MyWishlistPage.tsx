@@ -11,13 +11,14 @@ import Pagination from './Pagination';
 interface MyWishlistPageProps {
   wishlist: GameItem[];
   onDataChange: () => void;
+  onOpenManualAdd: () => void;
 }
 
 type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition';
 type SortDirection = 'asc' | 'desc';
 
 
-const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange }) => {
+const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange, onOpenManualAdd }) => {
   const { user } = useUser();
   const { t } = useLocalization();
   const [sortKey, setSortKey] = useState<SortKey>('title');
@@ -123,6 +124,14 @@ const MyWishlistPage: React.FC<MyWishlistPageProps> = ({ wishlist, onDataChange 
     <div className="w-full max-w-7xl animate-fade-in bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8">
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('wishlist.title', { count: totalItems })}</h2>
+        <div className="flex items-center gap-4 flex-wrap justify-center">
+            <button
+                onClick={onOpenManualAdd}
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+            >
+                {t('wishlist.addManually')}
+            </button>
+        </div>
       </div>
       
       <div className="mb-6 p-4 bg-gray-200/30 dark:bg-neutral-dark/30 rounded-lg border border-neutral-900/10 dark:border-neutral-light/10">

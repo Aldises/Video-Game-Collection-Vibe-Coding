@@ -21,7 +21,8 @@
     "collection": "Meine Sammlung",
     "wishlist": "Meine Wunschliste",
     "analytics": "Analysen",
-    "account": "Mein Konto"
+    "account": "Mein Konto",
+    "subscription": "Abonnement"
   },
   "header": {
     "title": "KI-Spiele-Scanner",
@@ -71,7 +72,10 @@
     "errorGeneric": "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie ein anderes Bild.",
     "errorEmpty": "Die KI gab eine leere Antwort zurück. Das Bild enthält möglicherweise keine erkennbaren Spiele oder Konsolen.",
     "errorJson": "Die KI konnte keine gültige JSON-Antwort liefern. Das Bild ist möglicherweise unscharf oder enthält keine erkennbaren Elemente.",
-    "errorFailed": "Analyse des Bildes fehlgeschlagen."
+    "errorFailed": "Analyse des Bildes fehlgeschlagen.",
+    "freeTierLimit": "Upgraden Sie auf einen Lite- oder Premium-Plan, um den KI-Scanner zu verwenden.",
+    "liteTierLimit": "Sie haben alle Ihre KI-Scans für diesen Monat verbraucht. Upgraden Sie auf Premium für unbegrenzte Scans.",
+    "scansRemaining": "Sie haben diesen Monat noch {count} KI-Scans übrig."
   },
   "scanResults": {
     "title": "Scan-Ergebnisse",
@@ -103,6 +107,7 @@
     "export": "Exportieren",
     "removeDuplicates": "Duplikate entfernen",
     "updatePrices": "Preise aktualisieren",
+    "addManually": "Manuell hinzufügen",
     "filterTitle": "Nach Titel filtern...",
     "filterPlatform": "Alle Plattformen",
     "filterPublisher": "Nach Herausgeber filtern...",
@@ -134,6 +139,7 @@
   },
   "wishlist": {
     "title": "Meine Wunschliste ({count})",
+    "addManually": "Manuell hinzufügen",
     "confirmRemoveTitle": "Artikel entfernen",
     "confirmRemoveMessage": "Sind Sie sicher, dass Sie diesen Artikel von Ihrer Wunschliste entfernen möchten?",
     "noMatch": "Keine Artikel entsprechen Ihren aktuellen Filtern.",
@@ -176,6 +182,10 @@
   "account": {
     "title": "Mein Konto",
     "description": "Verwalten Sie Ihre Kontoeinstellungen und Sicherheit.",
+    "subscriptionTitle": "Abonnement",
+    "subscriptionDescription": "Sie verwenden derzeit den {plan}-Plan.",
+    "manageSubscriptionButton": "Abrechnung verwalten",
+    "upgradeButton": "Plan upgraden",
     "passwordChangeTitle": "Passwort ändern",
     "currentPasswordLabel": "Aktuelles Passwort",
     "newPasswordLabel": "Neues Passwort",
@@ -263,5 +273,51 @@
     "contactMessageLabel": "Ihre Nachricht",
     "contactSend": "Nachricht senden",
     "contactSuccess": "Vielen Dank für Ihre Nachricht! Wir werden uns bald bei Ihnen melden."
+  },
+  "subscription": {
+    "title": "Wählen Sie Ihren Plan",
+    "description": "Schalten Sie mehr Funktionen frei und entfernen Sie Limits, indem Sie Ihren Plan upgraden.",
+    "choosePlan": "Diesen Plan wählen",
+    "currentPlan": "Aktueller Plan"
+  },
+  "plans": {
+    "free": {
+      "name": "Kostenlos",
+      "priceDetails": "für immer"
+    },
+    "lite": {
+      "name": "Lite",
+      "priceDetails": "pro Monat"
+    },
+    "premium": {
+      "name": "Premium",
+      "priceDetails": "pro Monat"
+    },
+    "features": {
+      "collectionLimit": "Bis zu {limit} Artikel in der Sammlung",
+      "wishlistLimit": "Bis zu {limit} Artikel auf der Wunschliste",
+      "manualAdd": "Artikel manuell hinzufügen",
+      "aiScan": "KI-gestütztes Foto-Scannen",
+      "aiScanLimited": "KI-Foto-Scannen ({limit}/Monat)",
+      "aiScanUnlimited": "Unbegrenztes KI-Foto-Scannen",
+      "unlimitedCollection": "Unbegrenzte Sammlung & Wunschliste",
+      "unlimited": "Unbegrenzt"
+    }
+  },
+  "limits": {
+    "collection": {
+      "title": "Sammlungslimit erreicht",
+      "message": "Sie haben das Limit von {limit} Artikeln für Ihre Sammlung erreicht. Bitte upgraden Sie Ihren Plan, um mehr hinzuzufügen."
+    },
+    "wishlist": {
+      "title": "Wunschlistenlimit erreicht",
+      "message": "Sie haben das Limit von {limit} Artikeln für Ihre Wunschliste erreicht. Bitte upgraden Sie Ihren Plan, um mehr hinzuzufügen."
+    },
+    "upgradeButton": "Plan upgraden"
+  },
+  "manualForm": {
+    "titleCollection": "Artikel zur Sammlung hinzufügen",
+    "titleWishlist": "Artikel zur Wunschliste hinzufügen",
+    "addButton": "Artikel hinzufügen"
   }
 }

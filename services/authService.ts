@@ -15,7 +15,8 @@ export const signUp = async ({ email, password }: AuthCredentials): Promise<User
   }
 
   sessionStorage.setItem('awaiting_confirmation', 'true');
-  return { id: data.user.id, email: data.user.email ?? null };
+  // FIX: Property 'profile' is missing in type '{ id: any; email: any; }' but required in type 'User'.
+  return { id: data.user.id, email: data.user.email ?? null, profile: null };
 };
 
 export const signIn = async ({ email, password }: AuthCredentials): Promise<SignInResult> => {
@@ -40,7 +41,8 @@ export const signIn = async ({ email, password }: AuthCredentials): Promise<Sign
 
   // Case 2: Standard login successful (no MFA).
   if (session && data.user) {
-    const user = { id: data.user.id, email: data.user.email ?? null };
+    // FIX: Property 'profile' is missing in type '{ id: any; email: any; }' but required in type 'User'.
+    const user = { id: data.user.id, email: data.user.email ?? null, profile: null };
     return { user, mfaRequired: false };
   }
   

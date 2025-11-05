@@ -11,6 +11,10 @@ import { SunIcon } from './icons/SunIcon';
 import { MoonIcon } from './icons/MoonIcon';
 import { ComputerDesktopIcon } from './icons/ComputerDesktopIcon';
 import Modal from './Modal';
+import { CreditCardIcon } from './icons/CreditCardIcon';
+import { Page } from '../App';
+import { redirectToCustomerPortal } from '../services/stripeService';
+import { useUser } from '../hooks/useUser';
 
 const ThemeSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -44,8 +48,13 @@ const ThemeSwitcher: React.FC = () => {
   );
 };
 
-const MyAccountPage: React.FC = () => {
+interface MyAccountPageProps {
+  onNavigate: (page: Page) => void;
+}
+
+const MyAccountPage: React.FC<MyAccountPageProps> = ({ onNavigate }) => {
     const { t } = useLocalization();
+    const { user } = useUser();
 
     // Generic states
     const [loading, setLoading] = useState(false);
@@ -108,8 +117,6 @@ const MyAccountPage: React.FC = () => {
         if (mfaEnabled) {
              setIsPasswordModalOpen(true);
         } else {
-            // This case should ideally ask for current password, but for now, we directly update.
-            // The error only occurs for MFA-enabled users.
              handleConfirmPasswordUpdate();
         }
     };
@@ -119,7 +126,6 @@ const MyAccountPage: React.FC = () => {
         setError(null);
         try {
             if (mfaEnabled && mfaFactorId) {
-                // Elevate session to AAL2 before updating password
                 await challengeAndVerifyMfa(mfaFactorId, mfaCodeForPassword);
             }
             await updatePassword(newPassword);
@@ -127,8 +133,6 @@ const MyAccountPage: React.FC = () => {
             setNewPassword('');
             setConfirmPassword('');
             setMfaCodeForPassword('');
-            // The service will now sign the user out.
-            // We just need to show a message.
             setSuccessMessage(t('account.passwordSuccessLogout'));
         } catch (err) {
             const errorMessage = err instanceof Error ? t(err.message) : t('account.passwordError');
@@ -205,6 +209,19 @@ const MyAccountPage: React.FC = () => {
             alert(t('account.copyFail'));
         }
     };
+    
+    const handleManageSubscription = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            await redirectToCustomerPortal();
+        } catch (err) {
+            const errorMessage = err instanceof Error ? t(err.message) : 'Failed to open subscription portal.';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     if (isMfaSetup) {
         return (
@@ -323,14 +340,29 @@ const MyAccountPage: React.FC = () => {
             {error && <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-500 text-red-800 dark:text-red-300 rounded-lg">{error}</div>}
             {successMessage && <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-500 text-green-800 dark:text-green-300 rounded-lg">{successMessage}</div>}
             
-             {/* Appearance */}
-            <div className="bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-6 sm:p-8">
+             <div className="bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-6 sm:p-8">
                 <h3 className="text-xl font-bold mb-2">{t('account.themeTitle')}</h3>
                 <p className="text-neutral-700 dark:text-neutral-300 mb-4">{t('account.themeDescription')}</p>
                 <ThemeSwitcher />
             </div>
+            
+             <div className="bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                    <CreditCardIcon className="h-6 w-6 text-brand-primary" />
+                    <h3 className="text-xl font-bold">{t('account.subscriptionTitle')}</h3>
+                </div>
+                <p className="text-neutral-700 dark:text-neutral-300 mb-4">{t('account.subscriptionDescription', { plan: user?.profile?.subscription_tier })}</p>
+                {user?.profile?.subscription_tier !== 'free' ? (
+                     <button onClick={handleManageSubscription} disabled={loading} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-600 hover:bg-neutral-500 disabled:opacity-50 disabled:cursor-wait">
+                           {loading ? t('common.processing') : t('account.manageSubscriptionButton')}
+                     </button>
+                ) : (
+                     <button onClick={() => onNavigate('subscription')} className="w-full sm:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90">
+                           {t('account.upgradeButton')}
+                     </button>
+                )}
+            </div>
 
-            {/* Password Change */}
             <div className="bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-4">
                     <KeyIcon className="h-6 w-6 text-brand-primary" />
@@ -354,7 +386,6 @@ const MyAccountPage: React.FC = () => {
                 </form>
             </div>
 
-            {/* 2FA Section */}
              <div className="bg-white/50 dark:bg-neutral-dark/50 backdrop-blur-sm border border-neutral-900/10 dark:border-neutral-light/10 rounded-xl shadow-2xl p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-4">
                     <ShieldCheckIcon className="h-6 w-6 text-brand-secondary" />

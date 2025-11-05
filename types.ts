@@ -1,9 +1,18 @@
+export type SubscriptionTier = 'free' | 'lite' | 'premium';
+
+export interface Profile {
+  id: string;
+  subscription_tier: SubscriptionTier;
+  scans_used_this_month: number;
+  scan_usage_reset_at: string;
+}
+
 export interface User {
   id: string;
   email: string | null;
+  profile: Profile | null;
 }
 
-// FIX: Added missing AuthCredentials interface to resolve import error in services/authService.ts.
 export interface AuthCredentials {
   email: string;
   password: string;

@@ -15,15 +15,18 @@ import MyAccountPage from './components/MyAccountPage';
 import EmailConfirmedPage from './components/EmailConfirmedPage';
 import PasswordResetPage from './components/PasswordResetPage';
 import HomePage from './components/HomePage';
+import SubscriptionPage from './components/SubscriptionPage';
 import { useUser } from './hooks/useUser';
-import { getUserCollection, getUserWishlist, addToCollection, addToWishlist } from './services/dbService';
+import { getUserCollection, getUserWishlist, addToCollection, addToWishlist, addManualItemToCollection, addManualItemToWishlist } from './services/dbService';
 import { useLocalization } from './hooks/useLocalization';
 import { supabase } from './services/supabaseClient';
+import Modal from './components/Modal';
+import ManualAddForm from './components/ManualAddForm';
 
-export type Page = 'home' | 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account';
+export type Page = 'home' | 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account' | 'subscription';
 
 const App: React.FC = () => {
-  const { user, loading } = useUser();
+  const { user, loading, refetchUser } = useUser();
   const { t } = useLocalization();
   const [inventory, setInventory] = useState<GameItem[]>([]);
   const [collection, setCollection] = useState<GameItem[]>([]);
@@ -33,9 +36,21 @@ const App: React.FC = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [authFlow, setAuthFlow] = useState<'idle' | 'resetPassword' | 'confirmed'>('idle');
+  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+  const [limitModalContent, setLimitModalContent] = useState({ title: '', message: ''});
+  const [isManualAddModalOpen, setIsManualAddModalOpen] = useState(false);
+  const [manualAddTarget, setManualAddTarget] = useState<'collection' | 'wishlist'>('collection');
+  
+  const subscription = user?.profile?.subscription_tier;
+  const planLimits = {
+      free: { collection: 100, wishlist: 20 },
+      lite: { collection: 100, wishlist: 20 },
+      premium: { collection: Infinity, wishlist: Infinity }
+  };
+  const currentLimits = planLimits[subscription || 'free'];
+
 
   useEffect(() => {
-    // On initial load, determine if user is logged in and set initial page
     supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
             setCurrentPage('scanner');
@@ -65,6 +80,9 @@ const App: React.FC = () => {
              }
         } else if (event === 'SIGNED_OUT') {
             setCurrentPage('home');
+            setInventory([]);
+            setCollection([]);
+            setWishlist([]);
         }
       }
     );
@@ -105,6 +123,8 @@ const App: React.FC = () => {
       }));
 
       setInventory(itemsWithSourceIds);
+      // Refetch user to get latest scan count
+      refetchUser();
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? t(err.message) : t('scanner.errorGeneric');
@@ -112,7 +132,7 @@ const App: React.FC = () => {
     } finally {
       setIsScanning(false);
     }
-  }, [t]);
+  }, [t, refetchUser]);
   
   const handleResetScanner = useCallback(() => {
     setInventory([]);
@@ -123,6 +143,14 @@ const App: React.FC = () => {
   
   const handleAddToCollection = async (items: GameItem[]) => {
     if (user) {
+      if (collection.length + items.length > currentLimits.collection) {
+        setLimitModalContent({
+          title: t('limits.collection.title'),
+          message: t('limits.collection.message', { limit: currentLimits.collection })
+        });
+        setIsLimitModalOpen(true);
+        return;
+      }
       await addToCollection(user.id, items);
       await refetchData();
     }
@@ -130,7 +158,47 @@ const App: React.FC = () => {
 
   const handleAddToWishlist = async (items: GameItem[]) => {
     if (user) {
+      if (wishlist.length + items.length > currentLimits.wishlist) {
+        setLimitModalContent({
+          title: t('limits.wishlist.title'),
+          message: t('limits.wishlist.message', { limit: currentLimits.wishlist })
+        });
+        setIsLimitModalOpen(true);
+        return;
+      }
       await addToWishlist(user.id, items);
+      await refetchData();
+    }
+  };
+  
+  const handleOpenManualAdd = (target: 'collection' | 'wishlist') => {
+    setManualAddTarget(target);
+    setIsManualAddModalOpen(true);
+  };
+
+  const handleManualAddItem = async (item: Omit<GameItem, 'id' | 'sourceId' | 'estimatedPrices'>, target: 'collection' | 'wishlist') => {
+    if (user) {
+      if (target === 'collection') {
+        if (collection.length >= currentLimits.collection) {
+          setLimitModalContent({
+            title: t('limits.collection.title'),
+            message: t('limits.collection.message', { limit: currentLimits.collection })
+          });
+          setIsLimitModalOpen(true);
+          return;
+        }
+        await addManualItemToCollection(user.id, item);
+      } else {
+         if (wishlist.length >= currentLimits.wishlist) {
+          setLimitModalContent({
+            title: t('limits.wishlist.title'),
+            message: t('limits.wishlist.message', { limit: currentLimits.wishlist })
+          });
+          setIsLimitModalOpen(true);
+          return;
+        }
+        await addManualItemToWishlist(user.id, item);
+      }
       await refetchData();
     }
   };
@@ -186,13 +254,15 @@ const App: React.FC = () => {
         case 'scanner':
             return renderScannerPage();
         case 'collection':
-            return <MyCollectionPage collection={collection} onDataChange={refetchData} />;
+            return <MyCollectionPage collection={collection} onDataChange={refetchData} onOpenManualAdd={() => handleOpenManualAdd('collection')} />;
         case 'wishlist':
-            return <MyWishlistPage wishlist={wishlist} onDataChange={refetchData} />;
+            return <MyWishlistPage wishlist={wishlist} onDataChange={refetchData} onOpenManualAdd={() => handleOpenManualAdd('wishlist')} />;
         case 'analytics':
             return <AnalyticsPage collection={collection} />;
         case 'account':
-            return <MyAccountPage />;
+            return <MyAccountPage onNavigate={setCurrentPage} />;
+        case 'subscription':
+            return <SubscriptionPage onNavigate={setCurrentPage}/>;
         case 'home': // User is logged in, redirect home to scanner
         default:
             return renderScannerPage();
@@ -217,6 +287,25 @@ const App: React.FC = () => {
   }
 
   return (
+    <>
+    <Modal
+        isOpen={isLimitModalOpen}
+        onClose={() => setIsLimitModalOpen(false)}
+        title={limitModalContent.title}
+        confirmText={t('limits.upgradeButton')}
+        onConfirm={() => {
+          setIsLimitModalOpen(false);
+          setCurrentPage('subscription');
+        }}
+    >
+      <p>{limitModalContent.message}</p>
+    </Modal>
+    <ManualAddForm
+      isOpen={isManualAddModalOpen}
+      onClose={() => setIsManualAddModalOpen(false)}
+      onAddItem={handleManualAddItem}
+      targetList={manualAddTarget}
+    />
     <div className="min-h-screen bg-neutral-light dark:bg-neutral-darker text-neutral-darker dark:text-neutral-light flex flex-col font-sans">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
@@ -224,6 +313,7 @@ const App: React.FC = () => {
       </main>
       <Footer />
     </div>
+    </>
   );
 };
 

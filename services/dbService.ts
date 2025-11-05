@@ -1,4 +1,4 @@
-import { GameItem, PriceEstimate } from '../types';
+import { GameItem, PriceEstimate, Profile } from '../types';
 import { supabase } from './supabaseClient';
 import { fetchPriceForItem } from './geminiService';
 
@@ -40,6 +40,36 @@ const mapDbItemToGameItem = (dbItem: DbCollectionItem): GameItem => ({
     high: p.high_price,
   })),
 });
+
+export const getUserProfile = async (userId: string): Promise<Profile> => {
+    let { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+    // If profile doesn't exist, create it. This handles users created before profiles table existed.
+    // PostgREST error `PGRST116` indicates that the query returned no rows.
+    if (error && error.code === 'PGRST116') {
+        console.log(`No profile found for user ${userId}, creating one.`);
+        const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({ id: userId })
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error("Error creating profile:", insertError);
+            throw new Error(insertError.message);
+        }
+        return newProfile as Profile;
+    } else if (error) {
+        console.error("Error fetching profile:", error);
+        throw new Error(error.message);
+    }
+
+    return data as Profile;
+}
 
 export const getUserCollection = async (userId: string): Promise<GameItem[]> => {
   // Step 1: Fetch main collection items.
@@ -157,6 +187,24 @@ export const addToCollection = async (userId: string, items: GameItem[]): Promis
     }
 };
 
+export const addManualItemToCollection = async (userId: string, item: Omit<GameItem, 'estimatedPrices' | 'id' | 'sourceId'>): Promise<void> => {
+    const { error } = await supabase
+        .from('collection_items')
+        .insert({
+            user_id: userId,
+            title: item.title,
+            publisher: item.publisher,
+            platform: item.platform,
+            release_year: item.releaseYear,
+            item_type: item.itemType,
+            condition: item.condition,
+        });
+    if (error) {
+        console.error('Error inserting manual item to collection:', error);
+        throw new Error(error.message);
+    }
+};
+
 export const addToWishlist = async (userId:string, items: GameItem[]): Promise<void> => {
     const itemsToInsert = items.map(item => ({
         user_id: userId,
@@ -172,6 +220,24 @@ export const addToWishlist = async (userId:string, items: GameItem[]): Promise<v
 
     if (error) {
         console.error("Error adding to wishlist:", error);
+        throw new Error(error.message);
+    }
+};
+
+export const addManualItemToWishlist = async (userId: string, item: Omit<GameItem, 'estimatedPrices' | 'id' | 'sourceId'>): Promise<void> => {
+    const { error } = await supabase
+        .from('wishlist_items')
+        .insert({
+            user_id: userId,
+            title: item.title,
+            publisher: item.publisher,
+            platform: item.platform,
+            release_year: item.releaseYear,
+            item_type: item.itemType,
+            condition: item.condition,
+        });
+    if (error) {
+        console.error('Error inserting manual item to wishlist:', error);
         throw new Error(error.message);
     }
 };

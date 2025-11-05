@@ -22,6 +22,7 @@ import Pagination from './Pagination';
 interface MyCollectionPageProps {
   collection: GameItem[];
   onDataChange: () => void;
+  onOpenManualAdd: () => void;
 }
 
 interface DuplicateGroup {
@@ -32,7 +33,7 @@ interface DuplicateGroup {
 type SortKey = 'title' | 'platform' | 'releaseYear' | 'publisher' | 'itemType' | 'condition' | 'priceEbayUsd' | 'priceRicardoChf' | 'priceAnibisChf' | 'priceEbayEur';
 type SortDirection = 'asc' | 'desc';
 
-const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataChange }) => {
+const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataChange, onOpenManualAdd }) => {
   const { user } = useUser();
   const { t } = useLocalization();
   const [sortKey, setSortKey] = useState<SortKey>('title');
@@ -502,6 +503,12 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-light">{t('collection.title', { count: totalItems })}</h2>
         <div className="flex items-center gap-4 flex-wrap justify-center">
+            <button
+                onClick={onOpenManualAdd}
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 px-5 rounded-lg transition-colors"
+            >
+                {t('collection.addManually')}
+            </button>
             <button
                 onClick={handleUpdatePrices}
                 disabled={isFindingDuplicates}
