@@ -25,7 +25,8 @@
   },
   "header": {
     "title": "KI-Spiele-Scanner",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "login": "Anmelden / Registrieren"
   },
   "footer": {
     "poweredBy": "Angetrieben von React, Tailwind CSS und Google Gemini"
@@ -240,5 +241,27 @@
     "previous": "Zurück",
     "next": "Weiter",
     "all": "Alle"
+  },
+  "home": {
+    "heroTitle": "Katalogisieren Sie Ihre Videospielsammlung Sofort",
+    "heroSubtitle": "Nutzen Sie die Kraft der KI, um Ihre gesamte Sammlung zu scannen, zu identifizieren und zu inventarisieren. Erhalten Sie detaillierte Informationen und Echtzeit-Preisschätzungen mit nur einem Foto.",
+    "heroCta": "Kostenlos starten",
+    "featuresTitle": "Alles-in-einem-Sammlungsmanagement",
+    "feature1Title": "KI-gestütztes Scannen",
+    "feature1Desc": "Machen Sie ein Foto von Ihren Spielen, und unsere KI identifiziert sofort Titel, Konsolen und Zubehör, was Ihnen Stunden manueller Eingabe erspart.",
+    "feature2Title": "Detailliertes Inventar",
+    "feature2Desc": "Erhalten Sie automatisch umfangreiche Details zu jedem Artikel, einschließlich Plattform, Erscheinungsjahr, Herausgeber und physischem Zustand.",
+    "feature3Title": "Marktpreisverfolgung",
+    "feature3Desc": "Bleiben Sie mit aktuellen Marktwerten von mehreren Online-Marktplätzen auf dem Laufenden, um den Wert Ihrer Sammlung zu verstehen.",
+    "feature4Title": "Sammlung & Wunschliste",
+    "feature4Desc": "Organisieren Sie einfach, was Sie besitzen, und führen Sie eine separate Liste der Spiele und Hardware, die Sie suchen.",
+    "mockupsTitle": "Sehen Sie es in Aktion",
+    "contactTitle": "Kontakt aufnehmen",
+    "contactDesc": "Haben Sie Fragen oder Feedback? Wir würden uns freuen, von Ihnen zu hören.",
+    "contactNameLabel": "Ihr Name",
+    "contactEmailLabel": "Ihre E-Mail",
+    "contactMessageLabel": "Ihre Nachricht",
+    "contactSend": "Nachricht senden",
+    "contactSuccess": "Vielen Dank für Ihre Nachricht! Wir werden uns bald bei Ihnen melden."
   }
 }

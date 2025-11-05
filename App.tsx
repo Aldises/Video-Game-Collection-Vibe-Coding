@@ -14,12 +14,13 @@ import AnalyticsPage from './components/AnalyticsPage';
 import MyAccountPage from './components/MyAccountPage';
 import EmailConfirmedPage from './components/EmailConfirmedPage';
 import PasswordResetPage from './components/PasswordResetPage';
+import HomePage from './components/HomePage';
 import { useUser } from './hooks/useUser';
 import { getUserCollection, getUserWishlist, addToCollection, addToWishlist } from './services/dbService';
 import { useLocalization } from './hooks/useLocalization';
 import { supabase } from './services/supabaseClient';
 
-export type Page = 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account';
+export type Page = 'home' | 'scanner' | 'collection' | 'wishlist' | 'analytics' | 'account';
 
 const App: React.FC = () => {
   const { user, loading } = useUser();
@@ -30,11 +31,19 @@ const App: React.FC = () => {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState<Page>('scanner');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
   const [authFlow, setAuthFlow] = useState<'idle' | 'resetPassword' | 'confirmed'>('idle');
 
   useEffect(() => {
-    // Manually check the URL hash on initial load to handle redirects correctly.
+    // On initial load, determine if user is logged in and set initial page
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            setCurrentPage('scanner');
+        } else {
+            setCurrentPage('home');
+        }
+    });
+
     const hash = window.location.hash;
     if (hash.includes('type=recovery')) {
       setAuthFlow('resetPassword');
@@ -51,6 +60,11 @@ const App: React.FC = () => {
              } else if (window.location.hash.includes('type=recovery')) {
                 setAuthFlow('resetPassword');
              }
+             if (session?.aal !== 'aal1') {
+                setCurrentPage('scanner');
+             }
+        } else if (event === 'SIGNED_OUT') {
+            setCurrentPage('home');
         }
       }
     );
@@ -160,7 +174,14 @@ const App: React.FC = () => {
     return null;
   };
 
-  const renderContent = () => {
+  const renderPage = () => {
+    if (!user) {
+        if (currentPage === 'home') {
+            return <HomePage onNavigateToLogin={() => setCurrentPage('scanner')} />;
+        }
+        return <LoginPage />;
+    }
+
     switch (currentPage) {
         case 'scanner':
             return renderScannerPage();
@@ -172,6 +193,7 @@ const App: React.FC = () => {
             return <AnalyticsPage collection={collection} />;
         case 'account':
             return <MyAccountPage />;
+        case 'home': // User is logged in, redirect home to scanner
         default:
             return renderScannerPage();
     }
@@ -198,7 +220,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-neutral-light dark:bg-neutral-darker text-neutral-darker dark:text-neutral-light flex flex-col font-sans">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-grow container mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
-        {!user ? <LoginPage /> : renderContent()}
+        {renderPage()}
       </main>
       <Footer />
     </div>

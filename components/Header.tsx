@@ -100,26 +100,26 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   return (
     <header className="bg-white/50 dark:bg-neutral-darker/50 backdrop-blur-sm border-b border-neutral-900/10 dark:border-neutral-light/10 sticky top-0 z-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-         <div className="flex items-center gap-3">
+         <button onClick={() => onNavigate(user ? 'scanner' : 'home')} className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-glow-start to-glow-end rounded-lg">
                 <GameControllerIcon className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-light tracking-tight">
               {t('header.title')}
             </h1>
-         </div>
+         </button>
          <div className="flex items-center gap-2 sm:gap-4">
-            {user && (
+            {user ? (
                 <nav className="flex items-center gap-1 sm:gap-2 bg-gray-200/50 dark:bg-neutral-dark/50 p-1 rounded-lg border border-black/10 dark:border-white/10">
                     <NavButton page="scanner" currentPage={currentPage} onNavigate={onNavigate} icon={<ScanIcon className="h-5 w-5" />} label={t('nav.scanner')} />
                     <NavButton page="collection" currentPage={currentPage} onNavigate={onNavigate} icon={<CollectionIcon className="h-5 w-5" />} label={t('nav.collection')} />
                     <NavButton page="wishlist" currentPage={currentPage} onNavigate={onNavigate} icon={<WishlistIcon className="h-5 w-5" />} label={t('nav.wishlist')} />
                     <NavButton page="analytics" currentPage={currentPage} onNavigate={onNavigate} icon={<AnalyticsIcon className="h-5 w-5" />} label={t('nav.analytics')} />
                 </nav>
-            )}
+            ) : null}
             <div className="flex items-center gap-3">
                 <LanguageSelector />
-                {user && (
+                {user ? (
                     <div className="flex items-center gap-2">
                         <div className="text-right hidden md:block">
                             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-light">{user.email}</p>
@@ -144,6 +144,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                             {t('header.logout')}
                         </button>
                     </div>
+                ) : (
+                    <button
+                        onClick={() => onNavigate('scanner')}
+                        className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-opacity text-sm"
+                    >
+                        {t('header.login')}
+                    </button>
                 )}
             </div>
          </div>

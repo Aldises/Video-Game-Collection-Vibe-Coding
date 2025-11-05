@@ -451,7 +451,13 @@ const MyCollectionPage: React.FC<MyCollectionPageProps> = ({ collection, onDataC
                         className="rounded"
                         checked={selectedForRemoval.size === allRemovableIds.length && allRemovableIds.length > 0}
                         onChange={handleSelectAllRemovable}
-                        ref={el => el && (el.indeterminate = selectedForRemoval.size > 0 && selectedForRemoval.size < allRemovableIds.length)}
+                        // FIX: The ref callback for setting the indeterminate state was returning a boolean,
+                        // which is not allowed. Changed to a block statement to ensure it returns void.
+                        ref={el => {
+                            if (el) {
+                                el.indeterminate = selectedForRemoval.size > 0 && selectedForRemoval.size < allRemovableIds.length;
+                            }
+                        }}
                     />
                     {t('collection.duplicatesModal.selectAll')}
                 </label>

@@ -25,7 +25,8 @@
   },
   "header": {
     "title": "Scanner de Jeux IA",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "login": "Connexion / Inscription"
   },
   "footer": {
     "poweredBy": "Propulsé par React, Tailwind CSS et Google Gemini"
@@ -240,5 +241,27 @@
     "previous": "Précédent",
     "next": "Suivant",
     "all": "Tous"
+  },
+  "home": {
+    "heroTitle": "Cataloguez Votre Collection de Jeux Vidéo Instantanément",
+    "heroSubtitle": "Utilisez la puissance de l'IA pour scanner, identifier et inventorier toute votre collection. Obtenez des informations détaillées et des estimations de prix en temps réel avec une simple photo.",
+    "heroCta": "Commencez Gratuitement",
+    "featuresTitle": "Gestion de Collection Tout-en-Un",
+    "feature1Title": "Scan par IA",
+    "feature1Desc": "Prenez une photo de vos jeux, et notre IA identifie instantanément les titres, consoles et accessoires, vous faisant gagner des heures de saisie manuelle.",
+    "feature2Title": "Inventaire Détaillé",
+    "feature2Desc": "Obtenez automatiquement des détails riches pour chaque article, y compris la plateforme, l'année de sortie, l'éditeur et l'état physique.",
+    "feature3Title": "Suivi des Prix du Marché",
+    "feature3Desc": "Restez à jour avec les valeurs actuelles du marché de plusieurs places de marché en ligne pour comprendre la valeur de votre collection.",
+    "feature4Title": "Collection & Liste de Souhaits",
+    "feature4Desc": "Organisez facilement ce que vous possédez et gardez une liste séparée des jeux et du matériel que vous recherchez.",
+    "mockupsTitle": "Découvrez-le en Action",
+    "contactTitle": "Contactez-nous",
+    "contactDesc": "Des questions ou des commentaires ? Nous serions ravis de vous entendre.",
+    "contactNameLabel": "Votre Nom",
+    "contactEmailLabel": "Votre E-mail",
+    "contactMessageLabel": "Votre Message",
+    "contactSend": "Envoyer le Message",
+    "contactSuccess": "Merci pour votre message ! Nous vous répondrons bientôt."
   }
 }

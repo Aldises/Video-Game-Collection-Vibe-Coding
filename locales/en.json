@@ -25,7 +25,8 @@
   },
   "header": {
     "title": "AI Game Scanner",
-    "logout": "Logout"
+    "logout": "Logout",
+    "login": "Login / Sign Up"
   },
   "footer": {
     "poweredBy": "Powered by React, Tailwind CSS, and Google Gemini"
@@ -240,5 +241,27 @@
     "previous": "Previous",
     "next": "Next",
     "all": "All"
+  },
+  "home": {
+    "heroTitle": "Catalog Your Video Game Collection Instantly",
+    "heroSubtitle": "Use the power of AI to scan, identify, and inventory your entire collection. Get detailed information and real-time price estimates with just a photo.",
+    "heroCta": "Get Started for Free",
+    "featuresTitle": "All-in-One Collection Management",
+    "feature1Title": "AI-Powered Scanning",
+    "feature1Desc": "Snap a photo of your games, and our AI instantly identifies titles, consoles, and accessories, saving you hours of manual entry.",
+    "feature2Title": "Detailed Inventory",
+    "feature2Desc": "Automatically get rich details for each item, including platform, release year, publisher, and physical condition.",
+    "feature3Title": "Market Price Tracking",
+    "feature3Desc": "Stay updated with current market values from multiple online marketplaces to understand the worth of your collection.",
+    "feature4Title": "Collection & Wishlist",
+    "feature4Desc": "Easily organize what you own and keep a separate list of the games and hardware you're looking for.",
+    "mockupsTitle": "See It In Action",
+    "contactTitle": "Get In Touch",
+    "contactDesc": "Have questions or feedback? We'd love to hear from you.",
+    "contactNameLabel": "Your Name",
+    "contactEmailLabel": "Your Email",
+    "contactMessageLabel": "Your Message",
+    "contactSend": "Send Message",
+    "contactSuccess": "Thank you for your message! We'll get back to you soon."
   }
 }
